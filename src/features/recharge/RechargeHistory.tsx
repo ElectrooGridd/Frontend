@@ -5,7 +5,7 @@ import { Button } from '@/components/Button'
 import { Input } from '@/components/Input'
 import { SkeletonLoader } from '@/components/SkeletonLoader'
 import { AlertBadge } from '@/components/AlertBadge'
-import { rechargesService, type RechargeTransaction } from '@/services/rechargesService'
+import { rechargesService, koboToNaira, type RechargeTransaction } from '@/services/rechargesService'
 
 const PAGE_SIZE = 20
 const FILTERS = ['All', 'Debit', 'Credit', 'Pending'] as const
@@ -83,7 +83,8 @@ export function RechargeHistory() {
     if (search.trim()) {
       const q = search.toLowerCase()
       const matchRef = r.payment_reference?.toLowerCase().includes(q)
-      const matchAmount = formatNaira(r.amount_naira).toLowerCase().includes(q)
+      const amountNaira = r.amount_kobo != null ? koboToNaira(r.amount_kobo) : undefined
+      const matchAmount = formatNaira(amountNaira).toLowerCase().includes(q)
       const matchStatus = r.status?.toLowerCase().includes(q)
       if (!matchRef && !matchAmount && !matchStatus) return false
     }
@@ -155,7 +156,7 @@ export function RechargeHistory() {
                     <p className="text-sm text-text-secondary">{formatDate(r.created_at)}</p>
                   </div>
                   <div className="text-right flex-shrink-0">
-                    <p className="font-medium text-text-primary">{formatNaira(r.amount_naira)}</p>
+                    <p className="font-medium text-text-primary">{formatNaira(r.amount_kobo != null ? koboToNaira(r.amount_kobo) : undefined)}</p>
                     <span
                       className={`
                         text-xs font-medium

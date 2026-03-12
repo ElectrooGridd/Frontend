@@ -10,7 +10,7 @@ export function BottomNav() {
   const location = useLocation()
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-gray-100 safe-area-pb z-40">
+    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 safe-area-pb z-40">
       <div className="flex items-center justify-around h-14 max-w-lg mx-auto">
         {nav.map(({ to, label, icon }) => {
           const isActive = location.pathname === to || (to !== '/dashboard' && location.pathname.startsWith(to))
@@ -20,7 +20,7 @@ export function BottomNav() {
               to={to}
               className={`
                 flex flex-col items-center justify-center flex-1 h-full text-xs font-medium
-                ${isActive ? 'text-primary' : 'text-text-secondary'}
+                ${isActive ? 'text-teal-600' : 'text-slate-500'}
               `}
             >
               <span className="text-lg mb-0.5" aria-hidden>{icon}</span>

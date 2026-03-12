@@ -14,5 +14,5 @@
 }
 
 body {
-  @apply bg-background text-text-primary font-sans antialiased;
+  @apply bg-slate-50 text-slate-900 font-sans antialiased;
 }

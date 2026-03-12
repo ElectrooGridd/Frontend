@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { getAuthToken, setAuthToken } from '@/services/api'
+import { authService } from '@/services/authService'
 
 type AuthState = {
   accessToken: string | null
@@ -15,8 +16,7 @@ export const useAuthStore = create<AuthState>()((set) => ({
     set({ accessToken: token })
   },
   logout: () => {
-    setAuthToken(null)
-    set({ accessToken: null })
+    authService.logout().finally(() => set({ accessToken: null }))
   },
   hydrate: () => set({ accessToken: getAuthToken() }),
 }))

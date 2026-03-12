@@ -36,7 +36,7 @@ npm run dev
 ```
 
 - **Dev server:** http://localhost:5173
-- **API proxy:** `/api` is proxied to `http://localhost:8080` (configure in `vite.config.ts` if your backend runs elsewhere)
+- **API:** Uses `https://electrogrid-backend-dev.up.railway.app` by default. Override with `VITE_API_URL` in `.env`.
 
 ## Build
 
@@ -51,16 +51,16 @@ npm run preview   # preview production build
 2. **Dashboard** — Greeting, balance card, energy usage chart (daily), estimated bill, alerts list.
 3. **Meter & Recharge** — Step flow: Verify meter → Link meter → Enter amount → Confirm payment (Paystack) → Track status; plus Recharge History.
 
-## API Base (aligned with backend contracts)
+## API (Railway backend – Swagger)
 
-- Base URL: `/api/v1` (relative; proxy forwards to backend)
-- Protected routes require header: `Authorization: Bearer <access_token>`
+- **Base:** `https://electrogrid-backend-dev.up.railway.app/api/v1`
+- **Swagger:** https://electrogrid-backend-dev.up.railway.app/swagger/index.html
 - **Verify meter:** `POST /meters/verify` → returns `customer_name`, `meter_number`, `disco_name`, `meter_type`, `meter_id`, etc. Flow shows “Is this your meter?” before linking.
-- **Link meter:** `POST /users/me/meters/link` → `{ meter_id, alias }` → `{ message }`
-- **Create intent:** `POST /recharges/intents` → `{ meter_id, amount_naira }` (optional: `expected_units`, `expires_at`) → returns `intent_id`, `recharge_id`, `status`, etc.
-- **Confirm recharge:** `POST /recharges/confirm` → full recharge transaction (use `id` for status polling).
-- **Get recharge:** `GET /recharges/{id}` → full recharge transaction.
-- **List recharges:** `GET /users/me/recharges?limit=20&offset=0` (limit default 20, max 100); response array newest first. Frontend uses “Load more” pagination.
+- **Verify meter:** `POST /meters/verify` (auth) → `{ meter_number }` → `customer_name`, `disco_name`, `meter_id`, etc.
+- **Link meter:** `POST /users/me/meters/link` → `{ meter_id }` only.
+- **Create intent:** `POST /recharges/intents` → `{ meter_id, amount_kobo }` (1 Naira = 100 Kobo).
+- **Confirm:** `POST /recharges/confirm` → `{ intent_id, payment_provider, payment_reference }`.
+- **Usage:** `GET /users/me/usage`. Note: `/billing/balance` and `/notifications/alerts` are not in the current API. Frontend uses “Load more” pagination.
 
 ## Project Structure
 

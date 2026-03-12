@@ -26,7 +26,6 @@ export function MeterRechargeFlow() {
   const [meterNumber, setMeterNumber] = useState('')
   const [meterDetails, setMeterDetails] = useState<VerifyMeterResponse | null>(null)
   const [meterId, setMeterId] = useState('')
-  const [alias, setAlias] = useState('')
   const [amount, setAmount] = useState('')
   const [intentId, setIntentId] = useState('')
   const [rechargeId, setRechargeId] = useState('')
@@ -40,7 +39,6 @@ export function MeterRechargeFlow() {
     setMeterNumber('')
     setMeterDetails(null)
     setMeterId('')
-    setAlias('')
     setAmount('')
     setIntentId('')
     setRechargeId('')
@@ -81,13 +79,13 @@ export function MeterRechargeFlow() {
 
   const handleLink = async () => {
     setError('')
-    if (!meterId || !alias.trim()) {
-      setError('Alias is required')
+    if (!meterId) {
+      setError('Meter ID is required')
       return
     }
     setLoading(true)
     try {
-      await metersService.linkMeter(meterId, alias.trim())
+      await metersService.linkMeter(meterId)
       setStep(3)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Link failed')
@@ -224,18 +222,11 @@ export function MeterRechargeFlow() {
           <>
             <h3 className="text-lg font-semibold text-text-primary mb-4">Link meter</h3>
             {meterDetails && (
-              <p className="text-sm text-text-secondary mb-2">
+              <p className="text-sm text-text-secondary mb-4">
                 {meterDetails.disco_name} · {meterDetails.meter_number}
               </p>
             )}
-            <Input
-              label="Alias (e.g. Home, My Apartment)"
-              placeholder="My Apartment"
-              value={alias}
-              onChange={(e) => setAlias(e.target.value)}
-              disabled={loading}
-            />
-            <Button className="mt-4" fullWidth loading={loading} onClick={handleLink}>
+            <Button className="mt-2" fullWidth loading={loading} onClick={handleLink}>
               Link meter
             </Button>
             <Button variant="secondary" className="mt-2" fullWidth onClick={() => setStep(1)}>

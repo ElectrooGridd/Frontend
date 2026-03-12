@@ -56,9 +56,9 @@ export function Register() {
   }
 
   return (
-    <Card className="w-full">
-      <h2 className="text-2xl font-semibold text-text-primary mb-1">Get started with Electrogrid</h2>
-      <p className="text-text-secondary text-sm mb-6">Create your account</p>
+    <Card className="w-full shadow-lg border-slate-200">
+      <h2 className="text-2xl font-bold text-slate-900 mb-1">Get started</h2>
+      <p className="text-slate-500 text-sm mb-6">Create your ElectroGrid account</p>
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
           <AlertBadge variant="danger" message={error} />
@@ -104,22 +104,22 @@ export function Register() {
             type="checkbox"
             checked={agreeTerms}
             onChange={(e) => setAgreeTerms(e.target.checked)}
-            className="mt-1 rounded border-gray-300 text-primary focus:ring-primary"
+            className="mt-1 rounded border-slate-300 text-teal-600 focus:ring-teal-500"
           />
-          <span className="text-sm text-text-secondary">
-            I agree to the terms and conditions
+          <span className="text-sm text-slate-600">
+            I agree to the{' '}
+            <Link to="/compliance" className="text-teal-600 font-medium hover:underline">
+              terms and conditions
+            </Link>
           </span>
         </label>
-        <Link to="/login" className="block text-sm text-primary font-medium hover:underline">
-          Sign in as an agent
-        </Link>
         <Button type="submit" fullWidth loading={loading} disabled={loading}>
           Continue with email
         </Button>
       </form>
-      <p className="mt-6 text-center text-sm text-text-secondary">
+      <p className="mt-6 text-center text-sm text-slate-500">
         Already have an account?{' '}
-        <Link to="/login" className="text-primary font-medium hover:underline">
+        <Link to="/login" className="text-teal-600 font-medium hover:underline">
           Log in
         </Link>
       </p>

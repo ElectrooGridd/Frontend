@@ -1,6 +1,6 @@
 import { api } from './api'
 
-/** POST /api/v1/meters/verify — Verify meter, get disco-derived details */
+/** POST /api/v1/meters/verify — Verify meter (auth required) */
 export type VerifyMeterRequest = { meter_number: string }
 
 export type VerifyMeterResponse = {
@@ -14,10 +14,8 @@ export type VerifyMeterResponse = {
   meter_id: string
 }
 
-/** POST /api/v1/users/me/meters/link — Link verified meter to current user */
-export type LinkMeterRequest = { meter_id: string; alias: string }
-
-export type LinkMeterResponse = { message: string }
+/** POST /api/v1/users/me/meters/link — Link meter (Swagger: only meter_id) */
+export type LinkMeterRequest = { meter_id: string }
 
 export const metersService = {
   async verify(meter_number: string): Promise<VerifyMeterResponse> {
@@ -25,8 +23,8 @@ export const metersService = {
     return data
   },
 
-  async linkMeter(meter_id: string, alias: string): Promise<LinkMeterResponse> {
-    const { data } = await api.post<LinkMeterResponse>('/users/me/meters/link', { meter_id, alias })
-    return data
+  async linkMeter(meter_id: string): Promise<{ message?: string }> {
+    const { data } = await api.post('/users/me/meters/link', { meter_id })
+    return data as { message?: string }
   },
 }

@@ -4,10 +4,10 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['Plus Jakarta Sans', 'system-ui', 'sans-serif'],
       },
       colors: {
-        primary: '#3B82F6',
+        primary: '#0d9488',
         success: '#22C55E',
         warning: '#F59E0B',
         danger: '#EF4444',

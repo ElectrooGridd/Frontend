@@ -41,9 +41,9 @@ export function Login() {
   }
 
   return (
-    <Card className="w-full">
-      <h2 className="text-2xl font-semibold text-text-primary mb-1">Welcome back to Electrogrid</h2>
-      <p className="text-text-secondary text-sm mb-6">Sign in to your account</p>
+    <Card className="w-full shadow-lg border-slate-200">
+      <h2 className="text-2xl font-bold text-slate-900 mb-1">Welcome back</h2>
+      <p className="text-slate-500 text-sm mb-6">Sign in to your ElectroGrid account</p>
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
           <AlertBadge variant="danger" message={error} />
@@ -66,16 +66,16 @@ export function Login() {
           autoComplete="current-password"
           disabled={loading}
         />
-        <Link to="#" className="block text-sm text-primary font-medium hover:underline">
+        <Link to="/forgot-password" className="block text-sm text-teal-600 font-medium hover:underline">
           Forgot password?
         </Link>
         <Button type="submit" fullWidth loading={loading} disabled={loading}>
           Log in
         </Button>
       </form>
-      <p className="mt-6 text-center text-sm text-text-secondary">
+      <p className="mt-6 text-center text-sm text-slate-500">
         Don&apos;t have an account?{' '}
-        <Link to="/register" className="text-primary font-medium hover:underline">
+        <Link to="/register" className="text-teal-600 font-medium hover:underline">
           Sign up
         </Link>
       </p>

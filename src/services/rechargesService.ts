@@ -1,32 +1,31 @@
 import { api } from './api'
 
-/** POST /api/v1/recharges/intents — Create recharge intent (auth required) */
+/** POST /api/v1/recharges/intents — Swagger: amount_kobo, meter_id, optional tariff_kobo_per_unit, expires_at */
 export type CreateIntentRequest = {
   meter_id: string
-  amount_naira: number
-  expected_units?: string
-  tariff_snapshot?: Record<string, unknown>
+  amount_kobo: number
+  tariff_kobo_per_unit?: number
   expires_at?: string
 }
 
 export type CreateIntentResponse = {
   intent_id: string
   recharge_id: string
-  amount_naira: number
-  expected_units?: string
+  amount_kobo: number
+  expected_units_milli?: number
   status: string
   expires_at?: string
   created_at?: string
 }
 
-/** POST /api/v1/recharges/confirm — Attach payment to recharge (auth required) */
+/** POST /api/v1/recharges/confirm */
 export type ConfirmRechargeRequest = {
   intent_id: string
   payment_provider: string
   payment_reference: string
 }
 
-/** Full recharge transaction (confirm response & GET /recharges/{id}) */
+/** RechargeTransactionResponse — no amount in response, we derive from intent or show placeholder */
 export type RechargeTransaction = {
   id: string
   intent_id?: string
@@ -35,22 +34,34 @@ export type RechargeTransaction = {
   payment_provider?: string
   payment_reference?: string
   status: string
-  amount_naira?: number
+  amount_kobo?: number
   created_at?: string
   updated_at?: string
 }
 
-/** GET /api/v1/users/me/recharges — List with pagination (limit default 20 max 100, offset default 0) */
 export type ListRechargesParams = { limit?: number; offset?: number }
+
+/** Convert Naira to Kobo (1 Naira = 100 Kobo) */
+export function nairaToKobo(naira: number): number {
+  return Math.round(naira * 100)
+}
+
+/** Convert Kobo to Naira */
+export function koboToNaira(kobo: number): number {
+  return kobo / 100
+}
 
 export const rechargesService = {
   async createIntent(
     meter_id: string,
     amount_naira: number,
-    options?: { expected_units?: string; expires_at?: string }
+    options?: { tariff_kobo_per_unit?: number; expires_at?: string }
   ): Promise<CreateIntentResponse> {
-    const body: CreateIntentRequest = { meter_id, amount_naira }
-    if (options?.expected_units != null) body.expected_units = options.expected_units
+    const body: CreateIntentRequest = {
+      meter_id,
+      amount_kobo: nairaToKobo(amount_naira),
+    }
+    if (options?.tariff_kobo_per_unit != null) body.tariff_kobo_per_unit = options.tariff_kobo_per_unit
     if (options?.expires_at != null) body.expires_at = options.expires_at
     const { data } = await api.post<CreateIntentResponse>('/recharges/intents', body)
     return data

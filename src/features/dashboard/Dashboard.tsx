@@ -134,13 +134,11 @@ export function Dashboard() {
   }, [])
 
   const balanceNaira = balance?.balance_naira ?? balance?.balance ?? 0
-  const usageData = usage?.data ?? usage?.usage ?? []
-  const chartData = usageData.map((p) => ({
-    name: p.date ?? p.value?.toString() ?? '',
-    value: p.usage ?? p.value ?? 0,
-  }))
-  if (chartData.length === 0) chartData.push({ name: '—', value: 0 })
-  const todayUsage = chartData.length ? chartData.reduce((a, b) => a + b.value, 0) : 0
+  const chartData = usage?.data ?? []
+  const chartDataFormatted = chartData.length
+    ? chartData
+    : [{ name: '—', value: 0 }]
+  const todayUsage = chartDataFormatted.length ? chartDataFormatted.reduce((a, b) => a + b.value, 0) : 0
   const projectedBill = todayUsage * 50
 
   return (
@@ -177,7 +175,7 @@ export function Dashboard() {
         ) : (
           <div className="h-48 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData}>
+              <BarChart data={chartDataFormatted}>
                 <XAxis dataKey="name" tick={{ fontSize: 12 }} />
                 <YAxis tick={{ fontSize: 12 }} />
                 <Tooltip formatter={(v: number) => [v, 'kWh']} />

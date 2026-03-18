@@ -6,14 +6,91 @@ const BASE_URL = `${API_BASE}/api/v1`
 export const api = axios.create({
   baseURL: BASE_URL,
   headers: { 'Content-Type': 'application/json' },
+  withCredentials: true, // #6 — send httpOnly refresh-token cookie automatically
 })
 
+// ---------------------------------------------------------------------------
+// Access token lives in memory only — never touches localStorage (#6)
+// ---------------------------------------------------------------------------
+let accessToken: string | null = null
+let refreshTimer: ReturnType<typeof setTimeout> | null = null
+
+export function setAccessToken(token: string | null) {
+  accessToken = token
+  scheduleProactiveRefresh(token) // #7
+}
+
+export function getAccessToken(): string | null {
+  return accessToken
+}
+
+export function clearAccessToken() {
+  accessToken = null
+  if (refreshTimer) {
+    clearTimeout(refreshTimer)
+    refreshTimer = null
+  }
+}
+
+// ---------------------------------------------------------------------------
+// #7 — Proactive refresh: schedule a silent refresh ~1 min before expiry
+// ---------------------------------------------------------------------------
+function decodeJwtExp(token: string): number | null {
+  try {
+    const payload = token.split('.')[1]
+    const decoded = JSON.parse(atob(payload))
+    return typeof decoded.exp === 'number' ? decoded.exp : null
+  } catch {
+    return null
+  }
+}
+
+export function isTokenExpired(token: string | null): boolean {
+  if (!token) return true
+  const exp = decodeJwtExp(token)
+  if (!exp) return true
+  return Date.now() >= exp * 1000
+}
+
+function scheduleProactiveRefresh(token: string | null) {
+  if (refreshTimer) {
+    clearTimeout(refreshTimer)
+    refreshTimer = null
+  }
+  if (!token) return
+
+  const exp = decodeJwtExp(token)
+  if (!exp) return
+
+  // Refresh 60 seconds before expiry (or immediately if less than 60s left)
+  const msUntilExpiry = exp * 1000 - Date.now()
+  const refreshIn = Math.max(msUntilExpiry - 60_000, 0)
+
+  refreshTimer = setTimeout(async () => {
+    try {
+      const { data } = await axios.post<{ access_token: string }>(
+        `${BASE_URL}/auth/refresh`,
+        {},
+        { withCredentials: true },
+      )
+      setAccessToken(data.access_token)
+    } catch {
+      // Refresh failed — the next API call will trigger the 401 interceptor
+    }
+  }, refreshIn)
+}
+
+// ---------------------------------------------------------------------------
+// Interceptors
+// ---------------------------------------------------------------------------
+
+// Attach access token from memory to every request
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('access_token')
-  if (token) config.headers.Authorization = `Bearer ${token}`
+  if (accessToken) config.headers.Authorization = `Bearer ${accessToken}`
   return config
 })
 
+// 401 handling — attempt one silent refresh, then give up
 let isRefreshing = false
 let failedQueue: Array<{ resolve: (token: string) => void; reject: (err: Error) => void }> = []
 
@@ -31,13 +108,7 @@ api.interceptors.response.use(
       return Promise.reject(new Error(message))
     }
 
-    const refreshToken = localStorage.getItem('refresh_token')
-    if (!refreshToken) {
-      clearAuth()
-      window.location.href = '/'
-      return Promise.reject(err)
-    }
-
+    // If already refreshing, queue this request
     if (isRefreshing) {
       return new Promise<string>((resolve, reject) => {
         failedQueue.push({ resolve, reject })
@@ -49,45 +120,42 @@ api.interceptors.response.use(
 
     isRefreshing = true
     try {
-      const { data } = await axios.post<{ access_token: string; refresh_token: string }>(
+      // Cookie is sent automatically via withCredentials
+      const { data } = await axios.post<{ access_token: string }>(
         `${BASE_URL}/auth/refresh`,
-        { refresh_token: refreshToken }
+        {},
+        { withCredentials: true },
       )
-      setAuthToken(data.access_token)
-      setRefreshToken(data.refresh_token)
+      setAccessToken(data.access_token)
       processQueue(data.access_token, null)
       original.headers.Authorization = `Bearer ${data.access_token}`
       return api(original)
     } catch (refreshErr) {
       processQueue(null, refreshErr instanceof Error ? refreshErr : new Error('Refresh failed'))
-      clearAuth()
+      clearAccessToken()
       window.location.href = '/'
       return Promise.reject(refreshErr)
     } finally {
       isRefreshing = false
     }
-  }
+  },
 )
 
-export function setAuthToken(token: string | null) {
-  if (token) localStorage.setItem('access_token', token)
-  else localStorage.removeItem('access_token')
-}
-
-export function setRefreshToken(token: string | null) {
-  if (token) localStorage.setItem('refresh_token', token)
-  else localStorage.removeItem('refresh_token')
-}
-
-export function getAuthToken(): string | null {
-  return localStorage.getItem('access_token')
-}
-
-export function getRefreshToken(): string | null {
-  return localStorage.getItem('refresh_token')
-}
-
-export function clearAuth() {
-  localStorage.removeItem('access_token')
-  localStorage.removeItem('refresh_token')
+// ---------------------------------------------------------------------------
+// tryRestoreSession — called once on app boot to silently exchange the
+// httpOnly refresh-token cookie for a fresh access token. (#8 on reload)
+// ---------------------------------------------------------------------------
+export async function tryRestoreSession(): Promise<string | null> {
+  try {
+    const { data } = await axios.post<{ access_token: string }>(
+      `${BASE_URL}/auth/refresh`,
+      {},
+      { withCredentials: true },
+    )
+    setAccessToken(data.access_token)
+    return data.access_token
+  } catch {
+    clearAccessToken()
+    return null
+  }
 }

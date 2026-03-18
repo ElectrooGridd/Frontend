@@ -1,35 +1,33 @@
-import { api, setAuthToken, setRefreshToken, clearAuth } from './api'
+import { api, setAccessToken, clearAccessToken } from './api'
 
 export type LoginPayload = { email: string; password: string }
 export type RegisterPayload = { name: string; email: string; password: string }
 export type AuthUser = { id: string; username?: string }
 export type AuthResponse = {
   access_token: string
-  refresh_token: string
   user?: AuthUser
 }
 
 export const authService = {
   async login(payload: LoginPayload): Promise<AuthResponse> {
     const { data } = await api.post<AuthResponse>('/auth/login', payload)
-    if (data.access_token) setAuthToken(data.access_token)
-    if (data.refresh_token) setRefreshToken(data.refresh_token)
+    // Access token → memory; refresh token arrived as httpOnly cookie automatically
+    if (data.access_token) setAccessToken(data.access_token)
     return data
   },
 
   async register(payload: RegisterPayload): Promise<AuthResponse> {
     const { data } = await api.post<AuthResponse>('/auth/register', payload)
-    if (data.access_token) setAuthToken(data.access_token)
-    if (data.refresh_token) setRefreshToken(data.refresh_token)
+    if (data.access_token) setAccessToken(data.access_token)
     return data
   },
 
   async logout(): Promise<void> {
-    const refreshToken = localStorage.getItem('refresh_token')
     try {
-      if (refreshToken) await api.post('/auth/logout', { refresh_token: refreshToken })
+      // Backend reads refresh token from httpOnly cookie & clears it
+      await api.post('/auth/logout')
     } finally {
-      clearAuth()
+      clearAccessToken()
     }
   },
 

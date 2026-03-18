@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from '@/components/ToastNotification'
 import { useAuthStore } from '@/store/authStore'
@@ -16,17 +17,29 @@ import { RechargeHistory } from '@/features/recharge/RechargeHistory'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const token = useAuthStore((s) => s.accessToken)
+  const isRestoring = useAuthStore((s) => s.isRestoring)
+  // While the session is being restored from the cookie, don't redirect
+  if (isRestoring) return null
   if (!token) return <Navigate to="/" replace />
   return <>{children}</>
 }
 
 function PublicOnlyRoute({ children }: { children: React.ReactNode }) {
   const token = useAuthStore((s) => s.accessToken)
+  const isRestoring = useAuthStore((s) => s.isRestoring)
+  if (isRestoring) return null
   if (token) return <Navigate to="/dashboard" replace />
   return <>{children}</>
 }
 
 export default function App() {
+  const restoreSession = useAuthStore((s) => s.restoreSession)
+
+  // On app boot, silently exchange the httpOnly cookie for an access token (#6, #8)
+  useEffect(() => {
+    restoreSession()
+  }, [restoreSession])
+
   return (
     <Toaster>
       <Routes>
@@ -53,11 +66,15 @@ export default function App() {
 
 function AuthRedirect() {
   const token = useAuthStore((s) => s.accessToken)
+  const isRestoring = useAuthStore((s) => s.isRestoring)
+  if (isRestoring) return null
   return <Navigate to={token ? '/dashboard' : '/'} replace />
 }
 
 function LandingOrRedirect() {
   const token = useAuthStore((s) => s.accessToken)
+  const isRestoring = useAuthStore((s) => s.isRestoring)
+  if (isRestoring) return null
   if (token) return <Navigate to="/dashboard" replace />
   return <Landing />
 }

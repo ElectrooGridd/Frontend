@@ -1,5 +1,5 @@
 import { Outlet } from 'react-router-dom'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { HeaderBar } from '@/components/HeaderBar'
 import { BottomNav } from '@/components/BottomNav'
@@ -10,14 +10,6 @@ function HeaderActions() {
     <>
       {/* Mobile: menu toggle (UserMenu with dropdown). Desktop: same menu for nav, but Log out is visible in header. */}
       <div className="flex items-center gap-2">
-        <Link
-          to="/compliance"
-          className="p-2 -m-2 min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0 flex items-center justify-center rounded-xl text-slate-600 hover:bg-slate-100 transition-colors"
-          aria-label="Compliance"
-        >
-          <span className="text-lg" aria-hidden>📋</span>
-        </Link>
-        {/* Desktop: visible Log out */}
         <DesktopLogout />
       </div>
     </>

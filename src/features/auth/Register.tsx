@@ -108,9 +108,9 @@ export function Register() {
           />
           <span className="text-sm text-slate-600">
             I agree to the{' '}
-            <Link to="/compliance" className="text-teal-600 font-medium hover:underline">
+            <span className="text-teal-600 font-medium">
               terms and conditions
-            </Link>
+            </span>
           </span>
         </label>
         <Button type="submit" fullWidth loading={loading} disabled={loading}>

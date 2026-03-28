@@ -70,9 +70,6 @@ export function Landing() {
       <footer className="px-6 py-6 border-t border-slate-200 bg-white">
         <div className="max-w-2xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <span className="text-slate-500 text-sm">© ElectroGrid</span>
-          <Link to="/compliance" className="text-teal-600 hover:text-teal-700 text-sm font-medium">
-            Terms & Privacy
-          </Link>
         </div>
       </footer>
     </div>

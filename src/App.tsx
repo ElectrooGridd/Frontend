@@ -10,7 +10,6 @@ import { Register } from '@/features/auth/Register'
 import { ForgotPassword } from '@/features/auth/ForgotPassword'
 import { ResetPassword } from '@/features/auth/ResetPassword'
 import { VerifyEmail } from '@/features/auth/VerifyEmail'
-import { Compliance } from '@/features/compliance/Compliance'
 import { Dashboard } from '@/features/dashboard/Dashboard'
 import { MeterRechargeFlow } from '@/features/recharge/MeterRechargeFlow'
 import { RechargeHistory } from '@/features/recharge/RechargeHistory'
@@ -44,7 +43,6 @@ export default function App() {
     <Toaster>
       <Routes>
         <Route path="/" element={<LandingOrRedirect />} />
-        <Route path="/compliance" element={<Compliance />} />
         <Route element={<AuthLayout />}>
           <Route path="/login" element={<PublicOnlyRoute><Login /></PublicOnlyRoute>} />
           <Route path="/register" element={<PublicOnlyRoute><Register /></PublicOnlyRoute>} />

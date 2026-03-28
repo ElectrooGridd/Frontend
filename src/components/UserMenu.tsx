@@ -69,14 +69,6 @@ export function UserMenu() {
           >
             History
           </Link>
-          <Link
-            to="/compliance"
-            onClick={() => setOpen(false)}
-            className="block px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 active:bg-slate-100"
-            role="menuitem"
-          >
-            Terms & Privacy
-          </Link>
           <hr className="my-2 border-slate-100 md:hidden" />
           <button
             type="button"

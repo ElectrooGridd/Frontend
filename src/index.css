@@ -338,3 +338,8 @@ body {
 .cartoon-icon-hover:hover .icon-inner {
   animation: squish 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
+
+/* Tint the dark logo to teal/green */
+.logo-teal {
+  filter: brightness(0) saturate(100%) invert(42%) sepia(93%) saturate(401%) hue-rotate(130deg) brightness(92%) contrast(97%);
+}

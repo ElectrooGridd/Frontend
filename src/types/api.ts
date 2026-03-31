@@ -122,6 +122,15 @@ export type CreateIntentResponse = {
   paystack_public_key?: string
 }
 
+/** POST /recharges/verify-payment response */
+export type VerifyPaymentResponse = {
+  verified: boolean
+  status: string
+  recharge_id: string
+  amount_kobo: number
+  channel: string
+}
+
 /** GET /billing/receipts */
 export type Receipt = {
   id: string

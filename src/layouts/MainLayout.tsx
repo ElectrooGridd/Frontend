@@ -127,16 +127,8 @@ function DesktopSidebar() {
     <aside className="hidden md:flex md:w-[250px] lg:w-[270px] flex-col bg-white border-r border-slate-200/60">
       {/* Logo */}
       <div className="px-5 pt-6 pb-8">
-        <Link to="/dashboard" className="flex items-center gap-3 group">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-teal-700 flex items-center justify-center shadow-lg shadow-teal-600/20 group-hover:shadow-teal-600/30 transition-shadow">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-white">
-              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </div>
-          <div>
-            <span className="text-[15px] font-bold text-slate-900 tracking-tight block">ElectroGrid</span>
-            <span className="text-[11px] text-slate-400 font-medium">Energy Console</span>
-          </div>
+        <Link to="/dashboard" className="group">
+          <img src="/images/logo.png" alt="ElectroGrid" className="w-12 h-12 object-contain logo-teal" />
         </Link>
       </div>
 

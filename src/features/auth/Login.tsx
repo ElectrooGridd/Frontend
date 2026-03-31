@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { Button } from '@/components/Button'
 import { Input } from '@/components/Input'
 import { AlertBadge } from '@/components/AlertBadge'
@@ -8,6 +8,7 @@ import { useAuthStore } from '@/store/authStore'
 
 export function Login() {
   const navigate = useNavigate()
+  const location = useLocation()
   const setToken = useAuthStore((s) => s.setToken)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -31,7 +32,12 @@ export function Login() {
       const res = await authService.login({ email: email.trim(), password })
       if (res.access_token) {
         setToken(res.access_token)
-        navigate('/dashboard', { replace: true })
+        const state = location.state as { quickRecharge?: unknown } | null
+        if (state?.quickRecharge) {
+          navigate('/recharge', { replace: true, state: { quickRecharge: state.quickRecharge } })
+        } else {
+          navigate('/dashboard', { replace: true })
+        }
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed')

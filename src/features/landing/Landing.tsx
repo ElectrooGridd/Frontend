@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/Button'
 import { quickRechargeService, type QuickVerifyResponse } from '@/services/quickRechargeService'
 
@@ -53,29 +53,27 @@ function QuickRecharge() {
     }
   }
 
-  const handleRecharge = async () => {
+  const navigate = useNavigate()
+
+  const handleRecharge = () => {
     setError('')
     const n = parseFloat(amount)
     if (isNaN(n) || n < 500) {
       setError('Minimum amount is ₦500')
       return
     }
-    if (!meterDetails?.meter_id) return
-    setLoading(true)
-    setStep('processing')
-    try {
-      const res = await quickRechargeService.createQuickRecharge(meterDetails.meter_id, n)
-      if (res.payment_url) {
-        window.location.href = res.payment_url
-      } else {
-        setStep('done')
-      }
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Recharge failed')
-      setStep('amount')
-    } finally {
-      setLoading(false)
-    }
+    if (!meterDetails) return
+    // Redirect to login with meter + amount state; after login the user
+    // lands on /recharge with everything pre-filled.
+    navigate('/login', {
+      state: {
+        quickRecharge: {
+          meterNumber: meterDetails.meter_number,
+          meterDetails,
+          amount: String(n),
+        },
+      },
+    })
   }
 
   const reset = () => {
@@ -183,7 +181,7 @@ function QuickRecharge() {
         <div className="space-y-4 animate-fade-in-up">
           <div className="rounded-xl bg-teal-50/60 border border-teal-100 p-4 space-y-2.5">
             <div className="flex items-center gap-2 mb-1">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0D9488" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0d9488" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
                 <polyline points="22 4 12 14.01 9 11.01" />
               </svg>
@@ -283,14 +281,7 @@ function QuickRecharge() {
               disabled={loading || !amount || parseFloat(amount) < 500}
               className="flex-1 py-3.5 rounded-xl bg-teal-500 hover:bg-teal-400 active:bg-teal-600 text-white font-bold text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-md shadow-teal-500/20 cartoon-btn"
             >
-              {loading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Processing...
-                </span>
-              ) : (
-                `Pay ${'\u20A6'}${amount ? parseFloat(amount).toLocaleString() : '0'}`
-              )}
+              {`Sign in & Pay ${'\u20A6'}${amount ? parseFloat(amount).toLocaleString() : '0'}`}
             </button>
           </div>
           {/* Meter summary mini */}
@@ -403,7 +394,7 @@ function HeroIllustration() {
 
         {/* Screen content */}
         {/* Header */}
-        <rect x="150" y="68" width="100" height="8" rx="4" fill="#0D9488" opacity="0.3" />
+        <rect x="150" y="68" width="100" height="8" rx="4" fill="#0d9488" opacity="0.3" />
         <text x="152" y="96" fontSize="9" fontWeight="700" fill="#0F172A" fontFamily="system-ui">Smart Recharge</text>
 
         {/* Balance card */}
@@ -422,7 +413,7 @@ function HeroIllustration() {
               width="8"
               rx="4"
               height={h}
-              fill={i === 3 ? '#0D9488' : '#99F6E4'}
+              fill={i === 3 ? '#0d9488' : '#99F6E4'}
               className="animate-bar-grow"
               style={{ animationDelay: `${0.8 + i * 0.1}s` }}
             />
@@ -431,7 +422,7 @@ function HeroIllustration() {
         <text x="152" y="178" fontSize="7" fontWeight="600" fill="#475569" fontFamily="system-ui">This week</text>
 
         {/* Bottom nav dots */}
-        <circle cx="180" cy="268" r="4" fill="#0D9488" />
+        <circle cx="180" cy="268" r="4" fill="#0d9488" />
         <circle cx="200" cy="268" r="4" fill="#E2E8F0" />
         <circle cx="220" cy="268" r="4" fill="#E2E8F0" />
       </g>
@@ -472,7 +463,7 @@ function HeroIllustration() {
 
       <defs>
         <linearGradient id="balGrad" x1="150" y1="106" x2="250" y2="166" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#0D9488" />
+          <stop stopColor="#0d9488" />
           <stop offset="1" stopColor="#059669" />
         </linearGradient>
       </defs>
@@ -484,11 +475,11 @@ function StepIllustration({ step }: { step: '01' | '02' | '03' }) {
   if (step === '01') return (
     <svg viewBox="0 0 80 80" fill="none" className="w-16 h-16">
       <circle cx="40" cy="40" r="36" fill="#CCFBF1" />
-      <rect x="24" y="22" width="32" height="36" rx="6" fill="white" stroke="#0D9488" strokeWidth="2" />
+      <rect x="24" y="22" width="32" height="36" rx="6" fill="white" stroke="#0d9488" strokeWidth="2" />
       <rect x="30" y="30" width="20" height="4" rx="2" fill="#99F6E4" />
       <rect x="30" y="38" width="14" height="4" rx="2" fill="#5EEAD4" />
-      <circle cx="52" cy="52" r="12" fill="#F0FDFA" stroke="#0D9488" strokeWidth="2" />
-      <path d="M48 52h8M52 48v8" stroke="#0D9488" strokeWidth="2" strokeLinecap="round" />
+      <circle cx="52" cy="52" r="12" fill="#F0FDFA" stroke="#0d9488" strokeWidth="2" />
+      <path d="M48 52h8M52 48v8" stroke="#0d9488" strokeWidth="2" strokeLinecap="round" />
     </svg>
   )
   if (step === '02') return (
@@ -501,9 +492,9 @@ function StepIllustration({ step }: { step: '01' | '02' | '03' }) {
   )
   return (
     <svg viewBox="0 0 80 80" fill="none" className="w-16 h-16">
-      <circle cx="40" cy="40" r="36" fill="#D1FAE5" />
+      <circle cx="40" cy="40" r="36" fill="#CCFBF1" />
       <path d="M30 26 L26 40 H34 L28 56" stroke="#F59E0B" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" fill="#FEF3C7" />
-      <path d="M44 26 L40 40 H48 L42 56" stroke="#0D9488" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" fill="#CCFBF1" />
+      <path d="M44 26 L40 40 H48 L42 56" stroke="#0d9488" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" fill="#CCFBF1" />
       <circle cx="54" cy="54" r="12" fill="white" stroke="#059669" strokeWidth="2" />
       <path d="M48 54 L52 58 L60 50" stroke="#059669" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
@@ -515,7 +506,7 @@ function FeatureIllustration({ type }: { type: string }) {
     verify: (
       <svg viewBox="0 0 48 48" fill="none" className="w-10 h-10">
         <circle cx="24" cy="24" r="22" fill="#CCFBF1" />
-        <path d="M16 24l5 5 11-11" stroke="#0D9488" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M16 24l5 5 11-11" stroke="#0d9488" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     ),
     wireless: (
@@ -552,8 +543,8 @@ function FeatureIllustration({ type }: { type: string }) {
     alerts: (
       <svg viewBox="0 0 48 48" fill="none" className="w-10 h-10">
         <circle cx="24" cy="24" r="22" fill="#CCFBF1" />
-        <path d="M24 12c-5.5 0-10 4-10 9v7l-2 3h24l-2-3v-7c0-5-4.5-9-10-9z" fill="#5EEAD4" stroke="#0D9488" strokeWidth="1.5" />
-        <path d="M20 33a4 4 0 008 0" stroke="#0D9488" strokeWidth="1.5" strokeLinecap="round" />
+        <path d="M24 12c-5.5 0-10 4-10 9v7l-2 3h24l-2-3v-7c0-5-4.5-9-10-9z" fill="#5EEAD4" stroke="#0d9488" strokeWidth="1.5" />
+        <path d="M20 33a4 4 0 008 0" stroke="#0d9488" strokeWidth="1.5" strokeLinecap="round" />
         <circle cx="34" cy="14" r="5" fill="#EF4444" />
         <text x="32" y="17" fontSize="8" fontWeight="700" fill="white" fontFamily="system-ui">3</text>
       </svg>
@@ -580,13 +571,8 @@ export function Landing() {
       {/* ───────────── NAVBAR ───────────── */}
       <nav className="sticky top-0 z-50 backdrop-blur-md bg-[#FAFDF9]/85 border-b border-teal-100/50">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-teal-400 to-emerald-500 flex items-center justify-center shadow-md shadow-teal-400/20 cartoon-btn">
-              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
-              </svg>
-            </div>
-            <span className="text-lg font-extrabold text-slate-800 tracking-tight">ElectroGrid</span>
+          <div className="flex items-center">
+            <img src="/images/logo.png" alt="ElectroGrid" className="w-12 h-12 object-contain cartoon-btn logo-teal" />
           </div>
           <div className="hidden sm:flex items-center gap-6 text-sm font-medium text-slate-500">
             <a href="#quick-recharge" className="hover:text-teal-600 transition-colors">Quick recharge</a>
@@ -759,11 +745,7 @@ export function Landing() {
             <div className="flex justify-center lg:justify-end">
               <div className="w-full max-w-[420px] bg-white rounded-3xl shadow-[0_8px_40px_-8px_rgba(0,0,0,0.1)] border border-slate-100 p-6 sm:p-8">
                 <div className="flex items-center gap-2.5 mb-6">
-                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-teal-400 to-emerald-500 flex items-center justify-center shadow-sm">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-white">
-                      <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </div>
+                  <img src="/images/logo.png" alt="ElectroGrid" className="w-10 h-10 object-contain logo-teal" />
                   <div>
                     <h3 className="font-bold text-slate-800 text-base">Quick Recharge</h3>
                     <p className="text-xs text-slate-400">No account required</p>
@@ -828,7 +810,7 @@ export function Landing() {
                   <path d="M90 220 A100 100 0 0 1 240 140" stroke="url(#gaugeGrad)" strokeWidth="12" strokeLinecap="round" fill="none" className="animate-arc-fill" />
 
                   {/* Center display */}
-                  <rect x="140" y="160" width="80" height="44" rx="10" fill="white" stroke="#0D9488" strokeWidth="2" />
+                  <rect x="140" y="160" width="80" height="44" rx="10" fill="white" stroke="#0d9488" strokeWidth="2" />
                   <text x="152" y="172" fontSize="8" fill="#64748B" fontFamily="system-ui">kWh used</text>
                   <text x="152" y="194" fontSize="20" fontWeight="800" fill="#0F172A" fontFamily="system-ui">247.5</text>
 
@@ -856,13 +838,13 @@ export function Landing() {
                   </g>
 
                   {/* Sparkles */}
-                  <path d="M310 160 L312 166 L318 168 L312 170 L310 176 L308 170 L302 168 L308 166Z" fill="#0D9488" opacity="0.5" className="animate-pop-in" style={{ animationDelay: '1.5s' }} />
+                  <path d="M310 160 L312 166 L318 168 L312 170 L310 176 L308 170 L302 168 L308 166Z" fill="#0d9488" opacity="0.5" className="animate-pop-in" style={{ animationDelay: '1.5s' }} />
                   <path d="M50 260 L51.5 264 L55.5 265.5 L51.5 267 L50 271 L48.5 267 L44.5 265.5 L48.5 264Z" fill="#FBBF24" opacity="0.5" className="animate-pop-in" style={{ animationDelay: '2s' }} />
 
                   <defs>
                     <linearGradient id="gaugeGrad" x1="90" y1="220" x2="240" y2="140" gradientUnits="userSpaceOnUse">
                       <stop stopColor="#5EEAD4" />
-                      <stop offset="1" stopColor="#0D9488" />
+                      <stop offset="1" stopColor="#0d9488" />
                     </linearGradient>
                   </defs>
                 </svg>
@@ -999,10 +981,10 @@ export function Landing() {
 
             {/* Floating cartoon elements */}
             <div className="absolute top-8 left-8 animate-cartoon-float" style={{ animationDelay: '0.5s' }}>
-              <svg viewBox="0 0 40 40" className="w-10 h-10 opacity-30"><circle cx="20" cy="20" r="16" fill="white"/><path d="M16 14l-2 8h6l-4 8" stroke="#0D9488" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              <svg viewBox="0 0 40 40" className="w-10 h-10 opacity-30"><circle cx="20" cy="20" r="16" fill="white"/><path d="M16 14l-2 8h6l-4 8" stroke="#0d9488" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </div>
             <div className="absolute bottom-8 right-10 animate-cartoon-float" style={{ animationDelay: '1.5s' }}>
-              <svg viewBox="0 0 32 32" className="w-8 h-8 opacity-30"><circle cx="16" cy="16" r="14" fill="white"/><text x="9" y="22" fontSize="16" fontWeight="800" fill="#0D9488" fontFamily="system-ui">{'\u20A6'}</text></svg>
+              <svg viewBox="0 0 32 32" className="w-8 h-8 opacity-30"><circle cx="16" cy="16" r="14" fill="white"/><text x="9" y="22" fontSize="16" fontWeight="800" fill="#0d9488" fontFamily="system-ui">{'\u20A6'}</text></svg>
             </div>
 
             <div className="relative">
@@ -1041,13 +1023,8 @@ export function Landing() {
         <div className="max-w-6xl mx-auto px-6 py-12">
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-10">
             <div className="sm:col-span-2 lg:col-span-1">
-              <div className="flex items-center gap-2.5 mb-4">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-teal-400 to-emerald-500 flex items-center justify-center shadow-sm">
-                  <svg className="w-4.5 h-4.5 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
-                  </svg>
-                </div>
-                <span className="text-base font-extrabold text-slate-800">ElectroGrid</span>
+              <div className="mb-4">
+                <img src="/images/logo.png" alt="ElectroGrid" className="w-11 h-11 object-contain logo-teal" />
               </div>
               <p className="text-sm text-slate-500 leading-relaxed max-w-xs">
                 Smart electricity recharge for modern Nigeria. Fast, secure, and always on.

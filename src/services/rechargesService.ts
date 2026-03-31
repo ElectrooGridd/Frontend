@@ -1,7 +1,7 @@
 import { api } from './api'
-import type { CreateIntentResponse, RechargeTransaction } from '@/types/api'
+import type { CreateIntentResponse, RechargeTransaction, VerifyPaymentResponse } from '@/types/api'
 
-export type { CreateIntentResponse, RechargeTransaction } from '@/types/api'
+export type { CreateIntentResponse, RechargeTransaction, VerifyPaymentResponse } from '@/types/api'
 
 type CreateIntentRequest = {
   meter_id: string
@@ -22,6 +22,9 @@ export function koboToNaira(kobo: number): number {
   return kobo / 100
 }
 
+/** Default tariff in kobo per unit (₦38.575/kWh = 3857.50 kobo = 385750 in integer kobo) */
+const DEFAULT_TARIFF_KOBO_PER_UNIT = 385750
+
 export const rechargesService = {
   async createIntent(
     meter_id: string,
@@ -31,8 +34,8 @@ export const rechargesService = {
     const body: CreateIntentRequest = {
       meter_id,
       amount_kobo: nairaToKobo(amount_naira),
+      tariff_kobo_per_unit: options?.tariff_kobo_per_unit ?? DEFAULT_TARIFF_KOBO_PER_UNIT,
     }
-    if (options?.tariff_kobo_per_unit != null) body.tariff_kobo_per_unit = options.tariff_kobo_per_unit
     if (options?.expires_at != null) body.expires_at = options.expires_at
     const { data } = await api.post<CreateIntentResponse>('/recharges/intents', body)
     return data
@@ -53,6 +56,14 @@ export const rechargesService = {
 
   async getRecharge(id: string): Promise<RechargeTransaction> {
     const { data } = await api.get<RechargeTransaction>(`/recharges/${id}`)
+    return data
+  },
+
+  async verifyPayment(intent_id: string, reference: string): Promise<VerifyPaymentResponse> {
+    const { data } = await api.post<VerifyPaymentResponse>('/recharges/verify-payment', {
+      intent_id,
+      reference,
+    })
     return data
   },
 

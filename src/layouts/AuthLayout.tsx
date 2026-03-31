@@ -213,13 +213,8 @@ export function AuthLayout() {
         </div>
 
         {/* Logo — top left */}
-        <Link to="/" className="relative z-10 flex items-center gap-3 group">
-          <div className="w-11 h-11 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center border border-white/10 group-hover:bg-white/20 transition-all duration-300">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="text-teal-300">
-              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="currentColor" opacity="0.2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </div>
-          <span className="text-xl font-bold text-white/90 tracking-tight">ElectroGrid</span>
+        <Link to="/" className="relative z-10 group">
+          <img src="/images/logo.png" alt="ElectroGrid" className="w-14 h-14 object-contain brightness-0 invert opacity-90" />
         </Link>
 
         {/* Center illustration */}
@@ -263,13 +258,8 @@ export function AuthLayout() {
       <div className="flex-1 flex flex-col min-h-screen bg-slate-50">
         {/* Mobile header */}
         <header className="lg:hidden flex items-center gap-3 p-4 sm:p-6">
-          <Link to="/" className="flex items-center gap-2.5 group">
-            <div className="w-9 h-9 rounded-xl bg-teal-600 flex items-center justify-center group-hover:bg-teal-700 transition-colors shadow-sm">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-white">
-                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </div>
-            <span className="text-lg font-bold text-slate-900 tracking-tight">ElectroGrid</span>
+          <Link to="/" className="group">
+            <img src="/images/logo.png" alt="ElectroGrid" className="w-11 h-11 object-contain logo-teal" />
           </Link>
         </header>
 

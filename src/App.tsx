@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { Toaster } from '@/components/ToastNotification'
 import { useAuthStore } from '@/store/authStore'
 import { useHydrateStores } from '@/store'
@@ -27,8 +27,16 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 function PublicOnlyRoute({ children }: { children: React.ReactNode }) {
   const token = useAuthStore((s) => s.accessToken)
   const isRestoring = useAuthStore((s) => s.isRestoring)
+  const location = useLocation()
   if (isRestoring) return null
-  if (token) return <Navigate to="/dashboard" replace />
+  if (token) {
+    // If the user just logged in from Buy on the Fly, forward to /recharge with the state
+    const state = location.state as { quickRecharge?: unknown } | null
+    if (state?.quickRecharge) {
+      return <Navigate to="/recharge" replace state={{ quickRecharge: state.quickRecharge }} />
+    }
+    return <Navigate to="/dashboard" replace />
+  }
   return <>{children}</>
 }
 

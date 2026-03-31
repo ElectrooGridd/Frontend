@@ -39,8 +39,8 @@ function extractError(err: unknown): string {
 export const quickRechargeService = {
   async verifyMeter(meter_number: string): Promise<QuickVerifyResponse> {
     try {
-      const { data } = await publicApi.post<QuickVerifyResponse>('/meters/verify', { meter_number })
-      return data
+      const { data } = await publicApi.post<{ data: QuickVerifyResponse }>('/meters/verify/public', { meter_number })
+      return data.data
     } catch (err) {
       throw new Error(extractError(err))
     }

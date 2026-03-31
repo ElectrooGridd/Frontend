@@ -6,6 +6,9 @@ import { AlertBadge } from '@/components/AlertBadge'
 import { useToast } from '@/components/ToastNotification'
 import { metersService, type VerifyMeterResponse } from '@/services/metersService'
 import { rechargesService, type RechargeTransaction } from '@/services/rechargesService'
+import { useBillingStore } from '@/store/billingStore'
+import { useRechargesStore } from '@/store/rechargesStore'
+import { useMetersStore } from '@/store/metersStore'
 
 const STEPS = [
   { label: 'Verify', icon: <SearchIcon /> },
@@ -53,7 +56,7 @@ export function MeterRechargeFlow() {
     try {
       const res = await metersService.verify(meterNumber.trim())
       setMeterDetails(res)
-      setMeterId(res.meter_id)
+      setMeterId(res.meter_id ?? '')
       setStep(1)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Verification failed')
@@ -65,10 +68,11 @@ export function MeterRechargeFlow() {
 
   const handleLink = async () => {
     setError('')
-    if (!meterId) { setError('Meter ID is required'); return }
+    if (!meterId) { setError('This meter is not registered in the system yet. Please contact support.'); return }
     setLoading(true)
     try {
       await metersService.linkMeter(meterId)
+      useMetersStore.getState().refresh() // Update global meters list
       setStep(3)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Link failed')
@@ -111,7 +115,14 @@ export function MeterRechargeFlow() {
       try {
         const r = await rechargesService.getRecharge(rechargeId)
         const s = (r.status ?? '').toLowerCase()
-        if (s === 'completed' || s === 'success') { toast.show('Recharge completed successfully', 'success'); reset(); return }
+        if (s === 'completed' || s === 'success') {
+              toast.show('Recharge completed successfully', 'success')
+              // Refresh global stores so dashboard/history reflect the new recharge
+              useBillingStore.getState().refresh()
+              useRechargesStore.getState().refresh()
+              reset()
+              return
+            }
         if (s === 'failed') { setError('Recharge failed'); return }
         setPollCount((c) => c + 1)
       } catch { setPollCount((c) => c + 1) }
@@ -228,10 +239,11 @@ export function MeterRechargeFlow() {
             </div>
 
             <div className="rounded-xl bg-slate-50 border border-slate-100 divide-y divide-slate-100 overflow-hidden">
-              <DetailRow label="Customer" value={meterDetails.customer_name} />
-              <DetailRow label="Meter number" value={meterDetails.meter_number} />
-              <DetailRow label="Disco" value={meterDetails.disco_name} />
-              <DetailRow label="Meter type" value={meterDetails.meter_type} />
+              <DetailRow label="Customer" value={meterDetails.customer_name || '—'} />
+              <DetailRow label="Meter number" value={meterDetails.meter_number || '—'} />
+              <DetailRow label="Disco" value={meterDetails.disco_name || '—'} />
+              <DetailRow label="Meter type" value={meterDetails.meter_type || '—'} />
+              <DetailRow label="Status" value={meterDetails.status || '—'} />
             </div>
 
             <div className="flex gap-3">

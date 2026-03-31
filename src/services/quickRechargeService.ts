@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const API_BASE = import.meta.env.VITE_API_URL ?? 'https://electrogrid-backend-dev.up.railway.app'
+const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8080'
 const BASE_URL = `${API_BASE}/api/v1`
 
 /** Public axios instance — no auth token, no interceptors */
@@ -46,15 +46,12 @@ export const quickRechargeService = {
     }
   },
 
-  async createQuickRecharge(meter_id: string, amount_naira: number): Promise<QuickRechargeResponse> {
-    try {
-      const { data } = await publicApi.post<QuickRechargeResponse>('/recharges/quick', {
-        meter_id,
-        amount_kobo: Math.round(amount_naira * 100),
-      })
-      return data
-    } catch (err) {
-      throw new Error(extractError(err))
-    }
+  /**
+   * Quick recharge is not yet supported by the backend.
+   * The /recharges/quick endpoint does not exist — authenticated users
+   * should use the standard rechargesService.createIntent flow instead.
+   */
+  async createQuickRecharge(_meter_id: string, _amount_naira: number): Promise<QuickRechargeResponse> {
+    throw new Error('Quick recharge is not available. Please log in to recharge your meter.')
   },
 }

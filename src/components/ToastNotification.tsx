@@ -16,7 +16,7 @@ export function Toaster({ children }: { children?: ReactNode }) {
   const show = useCallback((message: string, type: Toast['type'] = 'info') => {
     const id = Date.now()
     setToasts((prev) => [...prev, { id, message, type }])
-    setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 4000)
+    setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 6000)
   }, [])
 
   return (

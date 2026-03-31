@@ -1,6 +1,7 @@
 import { Outlet, Link, useLocation } from 'react-router-dom'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
+import { useNotificationsStore } from '@/store/notificationsStore'
 import { HeaderBar } from '@/components/HeaderBar'
 import { BottomNav } from '@/components/BottomNav'
 import { UserMenu } from '@/components/UserMenu'
@@ -81,6 +82,7 @@ function DesktopSidebar() {
   const location = useLocation()
   const logout = useAuthStore((s) => s.logout)
   const navigate = useNavigate()
+  const unreadCount = useNotificationsStore((s) => s.unreadCount)
 
   const mainItems = sidebarNav.filter((i) => i.section === 'main')
   const insightItems = sidebarNav.filter((i) => i.section === 'insights')
@@ -106,7 +108,13 @@ function DesktopSidebar() {
           {icon(isActive)}
         </span>
         <span className="flex-1">{label}</span>
-        {badge && <span className={`w-2 h-2 rounded-full ${isActive ? 'bg-white' : 'bg-red-500'}`} />}
+        {badge && unreadCount > 0 && (
+          <span className={`min-w-[18px] h-[18px] rounded-full text-[10px] font-bold flex items-center justify-center px-1 ${
+            isActive ? 'bg-white text-teal-600' : 'bg-red-500 text-white'
+          }`}>
+            {unreadCount > 99 ? '99+' : unreadCount}
+          </span>
+        )}
         {isDisabled && <span className="text-[10px] font-semibold text-slate-300 uppercase tracking-wider">Soon</span>}
       </>
     )

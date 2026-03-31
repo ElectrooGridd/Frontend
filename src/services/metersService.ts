@@ -1,21 +1,7 @@
 import { api } from './api'
+import type { VerifyMeterResponse } from '@/types/api'
 
-/** POST /api/v1/meters/verify — Verify meter (auth required) */
-export type VerifyMeterRequest = { meter_number: string }
-
-export type VerifyMeterResponse = {
-  customer_name: string
-  meter_number: string
-  disco_id: string
-  disco_code: string
-  disco_name: string
-  meter_type: string
-  status: string
-  meter_id: string
-}
-
-/** POST /api/v1/users/me/meters/link — Link meter (Swagger: only meter_id) */
-export type LinkMeterRequest = { meter_id: string }
+export type { VerifyMeterResponse, MeterResponse } from '@/types/api'
 
 export const metersService = {
   async verify(meter_number: string): Promise<VerifyMeterResponse> {

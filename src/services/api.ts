@@ -1,12 +1,13 @@
 import axios, { type AxiosError } from 'axios'
 
-const API_BASE = import.meta.env.VITE_API_URL ?? 'https://electrogrid-backend-dev.up.railway.app'
+const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8080'
 const BASE_URL = `${API_BASE}/api/v1`
 
 export const api = axios.create({
   baseURL: BASE_URL,
   headers: { 'Content-Type': 'application/json' },
   withCredentials: true, // #6 — send httpOnly refresh-token cookie automatically
+  timeout: 15000,
 })
 
 // ---------------------------------------------------------------------------
@@ -100,7 +101,14 @@ function processQueue(token: string | null, err: Error | null) {
 }
 
 api.interceptors.response.use(
-  (res) => res,
+  (res) => {
+    // Backend wraps successful responses in { data: ... } — unwrap so callers
+    // get the payload directly from `response.data` instead of `response.data.data`.
+    if (res.data && typeof res.data === 'object' && 'data' in res.data && Object.keys(res.data).length === 1) {
+      res.data = res.data.data
+    }
+    return res
+  },
   async (err: AxiosError<{ message?: string; error?: string }>) => {
     const original = err.config
     if (!original || err.response?.status !== 401) {
@@ -150,7 +158,7 @@ export async function tryRestoreSession(): Promise<string | null> {
     const { data } = await axios.post<{ access_token: string }>(
       `${BASE_URL}/auth/refresh`,
       {},
-      { withCredentials: true },
+      { withCredentials: true, timeout: 5000 },
     )
     setAccessToken(data.access_token)
     return data.access_token

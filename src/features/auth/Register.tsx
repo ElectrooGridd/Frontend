@@ -4,11 +4,9 @@ import { Button } from '@/components/Button'
 import { Input } from '@/components/Input'
 import { AlertBadge } from '@/components/AlertBadge'
 import { authService } from '@/services/authService'
-import { useAuthStore } from '@/store/authStore'
 
 export function Register() {
   const navigate = useNavigate()
-  const setToken = useAuthStore((s) => s.setToken)
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
@@ -53,15 +51,13 @@ export function Register() {
     }
     setLoading(true)
     try {
-      const res = await authService.register({
+      await authService.register({
         name: `${firstName.trim()} ${lastName.trim()}`.trim(),
         email: email.trim(),
         password,
       })
-      if (res.access_token) {
-        setToken(res.access_token)
-        navigate('/dashboard', { replace: true })
-      }
+      // Don't auto-login — redirect to verify email page
+      navigate(`/verify-email?email=${encodeURIComponent(email.trim())}`, { replace: true })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed')
     } finally {

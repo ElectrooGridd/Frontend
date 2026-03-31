@@ -1,45 +1,16 @@
 import { api } from './api'
+import type { CreateIntentResponse, RechargeTransaction } from '@/types/api'
 
-/** POST /api/v1/recharges/intents — Swagger: amount_kobo, meter_id, optional tariff_kobo_per_unit, expires_at */
-export type CreateIntentRequest = {
+export type { CreateIntentResponse, RechargeTransaction } from '@/types/api'
+
+type CreateIntentRequest = {
   meter_id: string
   amount_kobo: number
   tariff_kobo_per_unit?: number
   expires_at?: string
 }
 
-export type CreateIntentResponse = {
-  intent_id: string
-  recharge_id: string
-  amount_kobo: number
-  expected_units_milli?: number
-  status: string
-  expires_at?: string
-  created_at?: string
-}
-
-/** POST /api/v1/recharges/confirm */
-export type ConfirmRechargeRequest = {
-  intent_id: string
-  payment_provider: string
-  payment_reference: string
-}
-
-/** RechargeTransactionResponse — no amount in response, we derive from intent or show placeholder */
-export type RechargeTransaction = {
-  id: string
-  intent_id?: string
-  user_id?: string
-  meter_id?: string
-  payment_provider?: string
-  payment_reference?: string
-  status: string
-  amount_kobo?: number
-  created_at?: string
-  updated_at?: string
-}
-
-export type ListRechargesParams = { limit?: number; offset?: number }
+type ListRechargesParams = { limit?: number; offset?: number }
 
 /** Convert Naira to Kobo (1 Naira = 100 Kobo) */
 export function nairaToKobo(naira: number): number {

@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from '@/components/ToastNotification'
 import { useAuthStore } from '@/store/authStore'
+import { useHydrateStores } from '@/store'
 import { AuthLayout } from '@/layouts/AuthLayout'
 import { MainLayout } from '@/layouts/MainLayout'
 import { Landing } from '@/features/landing/Landing'
@@ -38,6 +39,9 @@ export default function App() {
   useEffect(() => {
     restoreSession()
   }, [restoreSession])
+
+  // Hydrate domain stores when auth state settles
+  useHydrateStores()
 
   return (
     <Toaster>

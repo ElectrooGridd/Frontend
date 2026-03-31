@@ -1,16 +1,7 @@
 import { api } from './api'
+import type { User } from '@/types/api'
 
-/** GET /api/v1/users/me — UserResponse from Swagger */
-export type User = {
-  id: string
-  name?: string
-  email?: string
-  phone?: string
-  address?: string
-  role?: string
-  email_verified?: boolean
-  created_at?: string
-}
+export type { User } from '@/types/api'
 
 export const userService = {
   async getMe(): Promise<User> {

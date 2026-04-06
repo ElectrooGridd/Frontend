@@ -1,8 +1,11 @@
 const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8080'
 const BASE_URL = `${API_BASE}/api/v1`
 
+const REFRESH_TOKEN_KEY = 'eg_rt'
+
 // ---------------------------------------------------------------------------
-// Access token lives in memory only — never touches localStorage (#6)
+// Token storage — access token in memory, refresh token in sessionStorage
+// so it survives page refreshes but is cleared when the tab closes.
 // ---------------------------------------------------------------------------
 let accessToken: string | null = null
 let refreshTimer: ReturnType<typeof setTimeout> | null = null
@@ -16,8 +19,27 @@ export function getAccessToken(): string | null {
   return accessToken
 }
 
+function setRefreshToken(token: string | null) {
+  if (token) {
+    sessionStorage.setItem(REFRESH_TOKEN_KEY, token)
+  } else {
+    sessionStorage.removeItem(REFRESH_TOKEN_KEY)
+  }
+}
+
+function getRefreshToken(): string | null {
+  return sessionStorage.getItem(REFRESH_TOKEN_KEY)
+}
+
+/** Store both tokens from a login/register/refresh response. */
+export function setTokens(accessTk: string | null, refreshTk?: string | null) {
+  setAccessToken(accessTk)
+  if (refreshTk !== undefined) setRefreshToken(refreshTk)
+}
+
 export function clearAccessToken() {
   accessToken = null
+  setRefreshToken(null)
   if (refreshTimer) {
     clearTimeout(refreshTimer)
     refreshTimer = null
@@ -60,19 +82,38 @@ function scheduleProactiveRefresh(token: string | null) {
 
   refreshTimer = setTimeout(async () => {
     try {
-      const res = await fetch(`${BASE_URL}/auth/refresh`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({}),
-      })
-      if (!res.ok) throw new Error('Refresh failed')
-      const data = await res.json()
-      setAccessToken(data.access_token)
+      const result = await callRefresh()
+      if (result) {
+        setTokens(result.access_token, result.refresh_token)
+      }
     } catch {
       // Refresh failed — the next API call will trigger the 401 handler
     }
   }, refreshIn)
+}
+
+// ---------------------------------------------------------------------------
+// Shared refresh helper — sends refresh token via body + cookie (belt & suspenders)
+// ---------------------------------------------------------------------------
+async function callRefresh(timeout = 5000): Promise<{ access_token: string; refresh_token?: string } | null> {
+  const rt = getRefreshToken()
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), timeout)
+  try {
+    const res = await fetch(`${BASE_URL}/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include', // still send cookie when available
+      body: JSON.stringify(rt ? { refresh_token: rt } : {}),
+      signal: controller.signal,
+    })
+    if (!res.ok) return null
+    return await res.json()
+  } catch {
+    return null
+  } finally {
+    clearTimeout(timer)
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -129,17 +170,11 @@ async function handleUnauthorized<T>(method: string, path: string, body?: unknow
 
   isRefreshing = true
   try {
-    const refreshRes = await fetch(`${BASE_URL}/auth/refresh`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({}),
-    })
-    if (!refreshRes.ok) throw new Error('Refresh failed')
-    const refreshData = await refreshRes.json()
-    setAccessToken(refreshData.access_token)
-    processQueue(refreshData.access_token, null)
-    return request<T>(method, path, body, opts, refreshData.access_token)
+    const result = await callRefresh(15000)
+    if (!result?.access_token) throw new Error('Refresh failed')
+    setTokens(result.access_token, result.refresh_token)
+    processQueue(result.access_token, null)
+    return request<T>(method, path, body, opts, result.access_token)
   } catch (refreshErr) {
     processQueue(null, refreshErr instanceof Error ? refreshErr : new Error('Refresh failed'))
     clearAccessToken()
@@ -241,27 +276,19 @@ export const api = {
 
 // ---------------------------------------------------------------------------
 // tryRestoreSession — called once on app boot to silently exchange the
-// httpOnly refresh-token cookie for a fresh access token. (#8 on reload)
+// refresh token for a fresh access token. (#8 on reload)
 // ---------------------------------------------------------------------------
 export async function tryRestoreSession(): Promise<string | null> {
-  const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), 5000)
   try {
-    const res = await fetch(`${BASE_URL}/auth/refresh`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({}),
-      signal: controller.signal,
-    })
-    if (!res.ok) throw new Error('Refresh failed')
-    const data = await res.json()
-    setAccessToken(data.access_token)
-    return data.access_token
+    const result = await callRefresh()
+    if (!result?.access_token) {
+      clearAccessToken()
+      return null
+    }
+    setTokens(result.access_token, result.refresh_token)
+    return result.access_token
   } catch {
     clearAccessToken()
     return null
-  } finally {
-    clearTimeout(timeout)
   }
 }

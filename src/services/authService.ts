@@ -1,24 +1,24 @@
-import { api, setAccessToken, clearAccessToken } from './api'
+import { api, setTokens, clearAccessToken } from './api'
 
 export type LoginPayload = { email: string; password: string }
 export type RegisterPayload = { name: string; email: string; password: string }
 export type AuthUser = { id: string; username?: string }
 export type AuthResponse = {
   access_token: string
+  refresh_token?: string
   user?: AuthUser
 }
 
 export const authService = {
   async login(payload: LoginPayload): Promise<AuthResponse> {
     const { data } = await api.post<AuthResponse>('/auth/login', payload)
-    // Access token → memory; refresh token arrived as httpOnly cookie automatically
-    if (data.access_token) setAccessToken(data.access_token)
+    if (data.access_token) setTokens(data.access_token, data.refresh_token)
     return data
   },
 
   async register(payload: RegisterPayload): Promise<AuthResponse> {
     const { data } = await api.post<AuthResponse>('/auth/register', payload)
-    if (data.access_token) setAccessToken(data.access_token)
+    if (data.access_token) setTokens(data.access_token, data.refresh_token)
     return data
   },
 

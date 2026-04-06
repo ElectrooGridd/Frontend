@@ -29,6 +29,22 @@ declare global {
   }
 }
 
+let paystackLoaded = false
+function loadPaystackScript(): Promise<void> {
+  if (paystackLoaded || window.PaystackPop) {
+    paystackLoaded = true
+    return Promise.resolve()
+  }
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script')
+    script.src = 'https://js.paystack.co/v1/inline.js'
+    script.async = true
+    script.onload = () => { paystackLoaded = true; resolve() }
+    script.onerror = () => reject(new Error('Failed to load payment provider'))
+    document.head.appendChild(script)
+  })
+}
+
 const STEPS = [
   { label: 'Verify', icon: <SearchIcon /> },
   { label: 'Confirm', icon: <ShieldIcon /> },
@@ -147,6 +163,7 @@ export function MeterRechargeFlow() {
         const userEmail = useUserStore.getState().user?.email
         if (!userEmail) { setError('Could not determine your email for payment'); setLoading(false); return }
 
+        await loadPaystackScript()
         const handler = window.PaystackPop.setup({
           key: res.paystack_public_key,
           email: userEmail,

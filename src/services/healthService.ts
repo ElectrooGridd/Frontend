@@ -1,5 +1,3 @@
-import axios from 'axios'
-
 const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8080'
 
 export type HealthResponse = {
@@ -10,7 +8,8 @@ export type HealthResponse = {
 
 export const healthService = {
   async check(): Promise<HealthResponse> {
-    const { data } = await axios.get<HealthResponse>(`${API_BASE}/health`)
-    return data
+    const res = await fetch(`${API_BASE}/health`)
+    if (!res.ok) throw new Error(`Health check failed: ${res.status}`)
+    return res.json()
   },
 }

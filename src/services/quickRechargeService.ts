@@ -1,13 +1,5 @@
-import axios from 'axios'
-
 const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8080'
 const BASE_URL = `${API_BASE}/api/v1`
-
-/** Public axios instance — no auth token, no interceptors */
-const publicApi = axios.create({
-  baseURL: BASE_URL,
-  headers: { 'Content-Type': 'application/json' },
-})
 
 export type QuickVerifyResponse = {
   customer_name: string
@@ -26,12 +18,6 @@ export type QuickRechargeResponse = {
 }
 
 function extractError(err: unknown): string {
-  if (axios.isAxiosError(err)) {
-    const data = err.response?.data
-    if (typeof data === 'string') return data
-    if (data?.message) return data.message
-    if (data?.error) return data.error
-  }
   if (err instanceof Error) return err.message
   return 'Something went wrong'
 }
@@ -39,7 +25,16 @@ function extractError(err: unknown): string {
 export const quickRechargeService = {
   async verifyMeter(meter_number: string): Promise<QuickVerifyResponse> {
     try {
-      const { data } = await publicApi.post<{ data: QuickVerifyResponse }>('/meters/verify/public', { meter_number })
+      const res = await fetch(`${BASE_URL}/meters/verify/public`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ meter_number }),
+      })
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}))
+        throw new Error(errData.message ?? errData.error ?? `Request failed: ${res.status}`)
+      }
+      const data = await res.json()
       return data.data
     } catch (err) {
       throw new Error(extractError(err))

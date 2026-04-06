@@ -187,7 +187,7 @@ test.describe('Grid Sync — Full Recharge E2E', () => {
     getServerErrors,
   }) => {
     // Return 400 (Bad Request) so the error is shown in the UI.
-    // (A 401 would trigger the axios interceptor's refresh-then-redirect flow,
+    // (A 401 would trigger the api client's refresh-then-redirect flow,
     //  which is separate tested behaviour.)
     await page.route('**/api/v1/auth/login', async (route) => {
       if (route.request().method() !== 'POST') return route.fallback()

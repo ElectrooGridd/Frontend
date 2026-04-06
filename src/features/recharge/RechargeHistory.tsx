@@ -5,6 +5,7 @@ import { Button } from '@/components/Button'
 import { Input } from '@/components/Input'
 import { SkeletonLoader } from '@/components/SkeletonLoader'
 import { AlertBadge } from '@/components/AlertBadge'
+import { useToast } from '@/components/ToastNotification'
 import { useRechargesStore } from '@/store/rechargesStore'
 import { koboToNaira } from '@/services/rechargesService'
 const FILTERS = ['All', 'Debit', 'Credit', 'Pending'] as const
@@ -47,8 +48,10 @@ export function RechargeHistory() {
   const hasMore = useRechargesStore((s) => s.hasMore)
   const fetchRecharges = useRechargesStore((s) => s.fetch)
   const loadMore = useRechargesStore((s) => s.loadMore)
+  const toast = useToast()
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<FilterType>('All')
+  const [expandedId, setExpandedId] = useState<string | null>(null)
 
   useEffect(() => {
     fetchRecharges()
@@ -140,33 +143,70 @@ export function RechargeHistory() {
           ) : (
             <>
               <ul className="space-y-3">
-                {filtered.map((r) => (
-                  <li key={r.id}>
-                    <Card padding="md" className="flex items-center gap-4">
-                      <span className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary text-lg">
-                        ⚡
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <p className="font-medium text-text-primary">Electricity Purchase</p>
-                        <p className="text-sm text-text-secondary">{formatDate(r.created_at)}</p>
-                      </div>
-                      <div className="text-right flex-shrink-0">
-                        <p className="font-medium text-text-primary">{formatNaira(r.amount_kobo != null ? koboToNaira(r.amount_kobo) : undefined)}</p>
-                        <span
-                          className={`
-                            text-xs font-medium
-                            ${statusVariant(r.status) === 'success' ? 'text-success' : ''}
-                            ${statusVariant(r.status) === 'warning' ? 'text-warning' : ''}
-                            ${statusVariant(r.status) === 'danger' ? 'text-danger' : ''}
-                            ${statusVariant(r.status) === 'info' ? 'text-primary' : ''}
-                          `}
-                        >
-                          {r.status === 'completed' || (r.status ?? '').toLowerCase() === 'success' ? 'Successful' : r.status}
-                        </span>
-                      </div>
-                    </Card>
-                  </li>
-                ))}
+                {filtered.map((r) => {
+                  const isExpanded = expandedId === r.id
+                  const hasToken = !!r.token
+                  return (
+                    <li key={r.id}>
+                      <Card padding="md" className={hasToken ? 'cursor-pointer' : ''} onClick={() => hasToken && setExpandedId(isExpanded ? null : r.id)}>
+                        <div className="flex items-center gap-4">
+                          <span className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary text-lg">
+                            ⚡
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium text-text-primary">Electricity Purchase</p>
+                            <p className="text-sm text-text-secondary">{formatDate(r.created_at)}</p>
+                          </div>
+                          <div className="text-right flex-shrink-0">
+                            <p className="font-medium text-text-primary">{formatNaira(r.amount_kobo != null ? koboToNaira(r.amount_kobo) : undefined)}</p>
+                            <span
+                              className={`
+                                text-xs font-medium
+                                ${statusVariant(r.status) === 'success' ? 'text-success' : ''}
+                                ${statusVariant(r.status) === 'warning' ? 'text-warning' : ''}
+                                ${statusVariant(r.status) === 'danger' ? 'text-danger' : ''}
+                                ${statusVariant(r.status) === 'info' ? 'text-primary' : ''}
+                              `}
+                            >
+                              {r.status === 'completed' || (r.status ?? '').toLowerCase() === 'success' ? 'Successful' : r.status}
+                            </span>
+                          </div>
+                          {hasToken && (
+                            <svg
+                              className={`w-4 h-4 text-slate-400 flex-shrink-0 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                              fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                            </svg>
+                          )}
+                        </div>
+                        {isExpanded && r.token && (
+                          <div className="mt-3 pt-3 border-t border-slate-100">
+                            <div className="rounded-lg bg-gradient-to-br from-teal-500 to-emerald-600 p-4 text-center text-white">
+                              <p className="text-xs uppercase tracking-wider opacity-80 mb-1.5">Electricity Token</p>
+                              <p className="text-lg font-extrabold font-mono tracking-widest">{r.token}</p>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  navigator.clipboard.writeText(r.token ?? '')
+                                  toast.show('Token copied!', 'success')
+                                }}
+                                className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-white/80 hover:text-white transition-colors"
+                              >
+                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" /></svg>
+                                Copy token
+                              </button>
+                            </div>
+                            {r.units_milli != null && (
+                              <p className="text-xs text-slate-500 text-center mt-2">{(r.units_milli / 1000).toFixed(1)} kWh</p>
+                            )}
+                          </div>
+                        )}
+                      </Card>
+                    </li>
+                  )
+                })}
               </ul>
               {hasMore && recharges.length === filtered.length && (
                 <div className="flex justify-center pt-4">

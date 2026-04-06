@@ -997,8 +997,9 @@ export function Landing() {
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <Link to="/register">
                   <Button
+                    variant="ghost"
                     size="lg"
-                    className="w-full sm:w-auto bg-white hover:bg-slate-50 text-teal-700 px-10 py-4 text-base font-extrabold rounded-2xl shadow-lg cartoon-btn border-0"
+                    className="w-full sm:w-auto !bg-white hover:!bg-slate-50 !text-teal-700 px-10 py-4 text-base font-extrabold rounded-2xl shadow-lg cartoon-btn border-0"
                   >
                     Create free account
                   </Button>

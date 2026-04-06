@@ -175,17 +175,19 @@ export function MeterRechargeFlow() {
             setError('Payment cancelled. You can try again.')
             setLoading(false)
           },
-          callback: async (response) => {
+          callback: (response) => {
             // Paystack popup succeeded — verify server-side
-            try {
-              await rechargesService.verifyPayment(res.intent_id, response.reference)
-              setStep(4) // Go to polling/status step
-              setPollCount(0)
-            } catch (e) {
-              setError(e instanceof Error ? e.message : 'Payment verification failed')
-            } finally {
-              setLoading(false)
-            }
+            rechargesService.verifyPayment(res.intent_id, response.reference)
+              .then(() => {
+                setStep(4) // Go to polling/status step
+                setPollCount(0)
+              })
+              .catch((e) => {
+                setError(e instanceof Error ? e.message : 'Payment verification failed')
+              })
+              .finally(() => {
+                setLoading(false)
+              })
           },
         })
         handler.openIframe()

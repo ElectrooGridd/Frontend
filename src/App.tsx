@@ -20,12 +20,19 @@ const MeterRechargeFlow = lazy(() => import('@/features/recharge/MeterRechargeFl
 const RechargeHistory = lazy(() => import('@/features/recharge/RechargeHistory').then((m) => ({ default: m.RechargeHistory })))
 
 // ---------------------------------------------------------------------------
-// Minimal loading spinner shown while lazy chunks download
+// Branded loading spinner — shown while lazy chunks download or session restores
 // ---------------------------------------------------------------------------
 function RouteSpinner() {
   return (
-    <div className="flex items-center justify-center min-h-[60vh]">
-      <span className="inline-block w-8 h-8 border-3 border-teal-600 border-t-transparent rounded-full animate-spin" />
+    <div className="flex flex-col items-center justify-center min-h-[60vh] gap-5">
+      <img
+        src="/images/logo.png"
+        alt="ElectroGrid"
+        className="w-14 h-14 object-contain animate-pulse"
+      />
+      <div className="w-[120px] h-[3px] bg-slate-200 rounded-full overflow-hidden">
+        <div className="h-full w-[40%] bg-teal-600 rounded-full animate-[slide_1s_ease-in-out_infinite]" />
+      </div>
     </div>
   )
 }

@@ -4,6 +4,14 @@ import { BrowserRouter } from 'react-router-dom'
 import App from './App'
 import './index.css'
 
+// Dismiss the HTML preloader once React is ready
+function dismissPreloader() {
+  const el = document.getElementById('preloader')
+  if (!el) return
+  el.classList.add('hide')
+  setTimeout(() => el.remove(), 300)
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
@@ -11,3 +19,5 @@ createRoot(document.getElementById('root')!).render(
     </BrowserRouter>
   </StrictMode>,
 )
+
+dismissPreloader()

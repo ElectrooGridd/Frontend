@@ -9,8 +9,21 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" media="print" onload="this.media='all'" />
     <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" /></noscript>
+    <style>
+      #preloader{display:flex;flex-direction:column;align-items:center;justify-content:center;position:fixed;inset:0;background:#f8fafc;z-index:9999;transition:opacity .3s}
+      #preloader.hide{opacity:0;pointer-events:none}
+      #preloader img{width:56px;height:56px;object-fit:contain;margin-bottom:20px;animation:preloader-pulse 1.6s ease-in-out infinite}
+      #preloader-bar{width:120px;height:3px;background:#e2e8f0;border-radius:3px;overflow:hidden}
+      #preloader-bar::after{content:'';display:block;width:40%;height:100%;background:#0d9488;border-radius:3px;animation:preloader-slide 1s ease-in-out infinite}
+      @keyframes preloader-pulse{0%,100%{opacity:.6;transform:scale(1)}50%{opacity:1;transform:scale(1.06)}}
+      @keyframes preloader-slide{0%{transform:translateX(-100%)}100%{transform:translateX(350%)}}
+    </style>
   </head>
   <body>
+    <div id="preloader">
+      <img src="/images/logo.png" alt="ElectroGrid" />
+      <div id="preloader-bar"></div>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

@@ -18,6 +18,7 @@ const VerifyEmail = lazy(() => import('@/features/auth/VerifyEmail').then((m) =>
 const Dashboard = lazy(() => import('@/features/dashboard/Dashboard').then((m) => ({ default: m.Dashboard })))
 const MeterRechargeFlow = lazy(() => import('@/features/recharge/MeterRechargeFlow').then((m) => ({ default: m.MeterRechargeFlow })))
 const RechargeHistory = lazy(() => import('@/features/recharge/RechargeHistory').then((m) => ({ default: m.RechargeHistory })))
+const MyMeters = lazy(() => import('@/features/meters/MyMeters').then((m) => ({ default: m.MyMeters })))
 
 // ---------------------------------------------------------------------------
 // Branded loading spinner — shown while lazy chunks download or session restores
@@ -91,6 +92,7 @@ export default function App() {
           </Route>
           <Route element={<MainLayout />}>
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/meters" element={<ProtectedRoute><MyMeters /></ProtectedRoute>} />
             <Route path="/recharge" element={<ProtectedRoute><MeterRechargeFlow /></ProtectedRoute>} />
             <Route path="/recharge/history" element={<ProtectedRoute><RechargeHistory /></ProtectedRoute>} />
           </Route>

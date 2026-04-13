@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/Button'
 import { Input } from '@/components/Input'
 import { NumberKeypad } from '@/components/NumberKeypad'
@@ -11,6 +11,7 @@ import { useBillingStore } from '@/store/billingStore'
 import { useRechargesStore } from '@/store/rechargesStore'
 import { useMetersStore } from '@/store/metersStore'
 import { useUserStore } from '@/store/userStore'
+import type { MeterResponse } from '@/types/api'
 
 declare global {
   interface Window {
@@ -76,10 +77,42 @@ export function MeterRechargeFlow() {
   const [error, setError] = useState('')
   const [pollCount, setPollCount] = useState(0)
   const [completedRecharge, setCompletedRecharge] = useState<RechargeTransaction | null>(null)
+  const [showNewMeter, setShowNewMeter] = useState(false)
 
-  // Pre-fill from quick recharge (Buy on the Fly → login → here)
+  const linkedMeters = useMetersStore((s) => s.meters)
+  const metersLoading = useMetersStore((s) => s.loading)
+
+  // Fetch linked meters on mount
+  useEffect(() => { useMetersStore.getState().fetch() }, [])
+
+  const handleSelectLinkedMeter = (meter: MeterResponse) => {
+    setMeterId(meter.id)
+    setMeterDetails({
+      customer_name: meter.customer_name,
+      meter_number: meter.meter_number,
+      disco_id: meter.disco_id,
+      disco_code: '',
+      disco_name: '',
+      meter_type: meter.meter_type,
+      status: meter.status,
+      meter_id: meter.id,
+    })
+    // Already linked — skip verify, confirm, and link steps; go straight to amount
+    setStep(3)
+  }
+
+  // Pre-fill from navigation state (dashboard top-up or quick recharge)
   useEffect(() => {
-    const state = location.state as { quickRecharge?: QuickRechargeState } | null
+    const state = location.state as { quickRecharge?: QuickRechargeState; linkedMeter?: MeterResponse } | null
+
+    // From dashboard "Top up" — skip straight to amount step
+    if (state?.linkedMeter) {
+      const meter = state.linkedMeter
+      handleSelectLinkedMeter(meter)
+      window.history.replaceState({}, '')
+      return
+    }
+
     if (!state?.quickRecharge) return
     const qr = state.quickRecharge
     // Re-verify the meter via the authenticated endpoint so we get a proper VerifyMeterResponse
@@ -116,6 +149,7 @@ export function MeterRechargeFlow() {
     setError('')
     setPollCount(0)
     setCompletedRecharge(null)
+    setShowNewMeter(false)
   }
 
   const handleVerify = async () => {
@@ -224,11 +258,23 @@ export function MeterRechargeFlow() {
     return () => clearInterval(t)
   }, [step, rechargeId, pollCount, toast])
 
+  const navigate = useNavigate()
+
   return (
     <div className="max-w-lg mx-auto space-y-6 animate-fade-in-up">
 
+      {/* ─── Back button ─── */}
+      <button
+        type="button"
+        onClick={() => navigate(-1)}
+        className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors pt-2"
+      >
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
+        Back
+      </button>
+
       {/* ─── Header ─── */}
-      <div className="text-center pt-2">
+      <div className="text-center">
         <div className="inline-flex items-center gap-2 bg-teal-50 border border-teal-100 rounded-full px-4 py-1.5 mb-4">
           <svg className="w-4 h-4 text-teal-600" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" /></svg>
           <span className="text-xs font-bold text-teal-700 tracking-wide">Smart Recharge</span>
@@ -287,33 +333,99 @@ export function MeterRechargeFlow() {
       {/* ─── Card ─── */}
       <div className="bg-white rounded-2xl shadow-[0_4px_24px_-4px_rgba(0,0,0,0.07)] border border-slate-100 p-6 sm:p-8 transition-all">
 
-        {/* STEP 0: Verify meter */}
+        {/* STEP 0: Select linked meter or verify new */}
         {step === 0 && (
           <div className="animate-fade-in-up space-y-5">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center text-teal-600">
-                <SearchIcon />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-slate-800">Verify your meter</h3>
-                <p className="text-xs text-slate-500">Enter your prepaid or postpaid meter number</p>
-              </div>
-            </div>
-            <Input
-              label="Meter number"
-              placeholder="e.g. 12345678901"
-              value={meterNumber}
-              onChange={(e) => setMeterNumber(e.target.value)}
-              disabled={loading}
-            />
-            <Button
-              className="mt-2 bg-teal-600 hover:bg-teal-500 border-0 rounded-xl"
-              fullWidth
-              loading={loading}
-              onClick={handleVerify}
-            >
-              Verify meter
-            </Button>
+            {/* Show linked meters if available and not adding new */}
+            {linkedMeters.length > 0 && !showNewMeter ? (
+              <>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center text-teal-600">
+                    <BoltIcon />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-800">Select a meter</h3>
+                    <p className="text-xs text-slate-500">Choose from your linked meters or add a new one</p>
+                  </div>
+                </div>
+
+                {metersLoading ? (
+                  <div className="flex justify-center py-6">
+                    <div className="w-6 h-6 border-2 border-teal-200 border-t-teal-600 rounded-full animate-spin" />
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {linkedMeters.map((meter) => (
+                      <button
+                        key={meter.id}
+                        type="button"
+                        onClick={() => handleSelectLinkedMeter(meter)}
+                        className="w-full flex items-center gap-3 p-4 rounded-xl bg-slate-50 border border-slate-100 hover:border-teal-300 hover:bg-teal-50/50 transition-all text-left group"
+                      >
+                        <div className="w-9 h-9 rounded-lg bg-teal-100 group-hover:bg-teal-200 flex items-center justify-center text-teal-700 transition-colors shrink-0">
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" /></svg>
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-semibold text-slate-800 truncate">{meter.customer_name || 'Meter'}</p>
+                          <p className="text-xs text-slate-500">{meter.meter_number} &middot; {meter.meter_type}</p>
+                        </div>
+                        <div className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full ${meter.status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-600'}`}>
+                          {meter.status}
+                        </div>
+                        <svg className="w-4 h-4 text-slate-400 group-hover:text-teal-500 transition-colors shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => setShowNewMeter(true)}
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-slate-200 hover:border-teal-300 text-sm font-semibold text-slate-500 hover:text-teal-600 transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                  Link a new meter
+                </button>
+              </>
+            ) : (
+              /* Verify new meter form */
+              <>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center text-teal-600">
+                    <SearchIcon />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-800">Verify your meter</h3>
+                    <p className="text-xs text-slate-500">Enter your prepaid or postpaid meter number</p>
+                  </div>
+                </div>
+                <Input
+                  label="Meter number"
+                  placeholder="e.g. 12345678901"
+                  value={meterNumber}
+                  onChange={(e) => setMeterNumber(e.target.value)}
+                  disabled={loading}
+                />
+                <Button
+                  className="mt-2 bg-teal-600 hover:bg-teal-500 border-0 rounded-xl"
+                  fullWidth
+                  loading={loading}
+                  onClick={handleVerify}
+                >
+                  Verify meter
+                </Button>
+                {linkedMeters.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    className="rounded-xl"
+                    fullWidth
+                    onClick={() => setShowNewMeter(false)}
+                  >
+                    Back to my meters
+                  </Button>
+                )}
+              </>
+            )}
           </div>
         )}
 
@@ -389,7 +501,15 @@ export function MeterRechargeFlow() {
               loading={loading}
               onClick={handleLink}
             >
-              Link meter
+              Link & recharge
+            </Button>
+            <Button
+              variant="secondary"
+              className="rounded-xl border-2 border-slate-200 hover:border-slate-300"
+              fullWidth
+              onClick={() => setStep(3)}
+            >
+              Skip, just recharge
             </Button>
             <Button
               variant="ghost"

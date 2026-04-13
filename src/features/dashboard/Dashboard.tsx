@@ -13,6 +13,7 @@ import {
 } from 'recharts'
 import { useUserStore } from '@/store/userStore'
 import { useBillingStore } from '@/store/billingStore'
+import { useMetersStore } from '@/store/metersStore'
 import { useNotificationsStore } from '@/store/notificationsStore'
 import { usePolling } from '@/hooks/usePolling'
 import { energyService, type UsageResponse } from '@/services/energyService'
@@ -222,9 +223,11 @@ function BalanceCard({
 /* ───── Quick Actions ───── */
 
 function QuickActions() {
+  const firstMeter = useMetersStore((s) => s.meters[0])
   const actions = [
     {
       to: '/recharge',
+      state: firstMeter ? { linkedMeter: firstMeter } : undefined,
       label: 'Top Up',
       desc: 'Recharge meter',
       gradient: 'from-teal-500 to-teal-600',
@@ -247,14 +250,14 @@ function QuickActions() {
       ),
     },
     {
-      to: '/recharge',
-      label: 'Pay Bill',
-      desc: 'Payment',
+      to: '/meters',
+      label: 'My Meters',
+      desc: 'Manage & recharge',
       gradient: 'from-amber-500 to-orange-500',
       icon: (
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="1" y="4" width="22" height="16" rx="2" />
-          <line x1="1" y1="10" x2="23" y2="10" />
+          <circle cx="12" cy="12" r="10" />
+          <path d="M12 6v6l4 2" />
         </svg>
       ),
     },
@@ -262,10 +265,11 @@ function QuickActions() {
 
   return (
     <div className="grid grid-cols-3 gap-3">
-      {actions.map(({ to, label, desc, gradient, icon }) => (
+      {actions.map(({ to, state, label, desc, gradient, icon }) => (
         <Link
           key={label}
           to={to}
+          state={state}
           className="group flex flex-col items-center text-center p-4 rounded-2xl bg-white border border-slate-200/60 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
         >
           <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center text-white mb-2.5 shadow-sm group-hover:scale-105 transition-transform`}>
@@ -477,7 +481,7 @@ function AlertsCard({ alerts, loading, error, onRetry }: { alerts: Alert[]; load
 
 /* ───── Projected Bill Card ───── */
 
-function ProjectedBillCard({ balance, loading }: { balance: Balance | null; loading: boolean }) {
+function ProjectedBillCard({ balance, loading, firstMeter }: { balance: Balance | null; loading: boolean; firstMeter?: import('@/types/api').MeterResponse }) {
   if (loading) {
     return (
       <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-6">
@@ -500,6 +504,7 @@ function ProjectedBillCard({ balance, loading }: { balance: Balance | null; load
         <p className="text-[11px] text-slate-500 mt-1">{consumed.toFixed(1)} kWh consumed so far</p>
         <Link
           to="/recharge"
+          state={firstMeter ? { linkedMeter: firstMeter } : undefined}
           className="inline-flex items-center gap-1.5 mt-3 text-xs font-semibold text-teal-400 hover:text-teal-300 transition-colors"
         >
           Top up now
@@ -677,6 +682,7 @@ export function Dashboard() {
   const loadingBalance = useBillingStore((s) => s.loading)
   const balanceError = useBillingStore((s) => s.error)
   const refreshBalance = useBillingStore((s) => s.refresh)
+  const firstMeter = useMetersStore((s) => s.meters[0])
   const alerts = useNotificationsStore((s) => s.alerts)
   const loadingAlerts = useNotificationsStore((s) => s.loading)
   const fetchAlerts = useNotificationsStore((s) => s.fetch)
@@ -759,7 +765,7 @@ export function Dashboard() {
             error={balanceError}
             onRetry={refreshBalance}
           />
-          <ProjectedBillCard balance={balance} loading={loadingBalance} />
+          <ProjectedBillCard balance={balance} loading={loadingBalance} firstMeter={firstMeter} />
         </div>
 
         {/* Right column */}

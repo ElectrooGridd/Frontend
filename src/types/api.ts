@@ -65,6 +65,8 @@ export type VerifyMeterResponse = {
 export type MeterResponse = {
   id: string
   disco_id: string
+  meter_number: string
+  customer_name: string
   meter_type: string
   status: string
   installed_at?: string

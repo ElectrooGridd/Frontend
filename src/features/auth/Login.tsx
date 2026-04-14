@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { Button } from '@/components/Button'
 import { Input } from '@/components/Input'
 import { AlertBadge } from '@/components/AlertBadge'
+import { SEO } from '@/components/SEO'
 import { authService } from '@/services/authService'
 import { useAuthStore } from '@/store/authStore'
 
@@ -47,6 +48,12 @@ export function Login() {
   }
 
   return (
+    <>
+    <SEO
+      title="Sign in to ElectroGrid"
+      description="Sign in to your ElectroGrid account to recharge prepaid meters, view token history, and manage saved meters."
+      path="/login"
+    />
     <div className="animate-fade-in-up">
       {/* Heading */}
       <div className="mb-8">
@@ -156,5 +163,6 @@ export function Login() {
         </Link>
       </p>
     </div>
+    </>
   )
 }

@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/Button'
 import { Input } from '@/components/Input'
 import { AlertBadge } from '@/components/AlertBadge'
+import { SEO } from '@/components/SEO'
 import { authService } from '@/services/authService'
 
 export function Register() {
@@ -66,6 +67,12 @@ export function Register() {
   }
 
   return (
+    <>
+    <SEO
+      title="Create your free ElectroGrid account"
+      description="Sign up free to recharge prepaid electricity meters, track token history, and manage multiple meters on ElectroGrid."
+      path="/register"
+    />
     <div className="animate-fade-in-up">
       {/* Heading */}
       <div className="mb-8">
@@ -220,5 +227,6 @@ export function Register() {
         </Link>
       </p>
     </div>
+    </>
   )
 }

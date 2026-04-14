@@ -3,8 +3,102 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/images/logo.png" />
+    <link rel="apple-touch-icon" href="/images/logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ElectroGrid – Energy Recharge</title>
+    <meta name="theme-color" content="#0d9488" />
+
+    <title>ElectroGrid – Prepaid Meter Recharge & Electricity Tokens in Nigeria</title>
+    <meta name="description" content="ElectroGrid is the fastest way to recharge your prepaid electricity meter in Nigeria. Buy DISCO tokens instantly, track usage, and manage multiple meters from one dashboard." />
+    <meta name="keywords" content="ElectroGrid, electrogrid, prepaid meter recharge, electricity token, DISCO recharge, buy electricity Nigeria, prepaid electricity, meter token, energy recharge, electric bill payment" />
+    <meta name="author" content="ElectroGrid" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+    <meta name="googlebot" content="index, follow" />
+    <link rel="canonical" href="https://www.electrogrid.ng/" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="ElectroGrid" />
+    <meta property="og:url" content="https://www.electrogrid.ng/" />
+    <meta property="og:title" content="ElectroGrid – Prepaid Meter Recharge & Electricity Tokens" />
+    <meta property="og:description" content="Recharge any prepaid electricity meter in Nigeria in seconds. Instant DISCO tokens, usage tracking, and multi-meter management." />
+    <meta property="og:image" content="https://www.electrogrid.ng/images/logo.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale" content="en_NG" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="ElectroGrid – Prepaid Meter Recharge & Electricity Tokens" />
+    <meta name="twitter:description" content="Recharge any prepaid electricity meter in Nigeria in seconds. Instant DISCO tokens, usage tracking, and multi-meter management." />
+    <meta name="twitter:image" content="https://www.electrogrid.ng/images/logo.png" />
+
+    <!-- JSON-LD: Organization -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "ElectroGrid",
+        "alternateName": "Electro Grid",
+        "url": "https://www.electrogrid.ng",
+        "logo": "https://www.electrogrid.ng/images/logo.png",
+        "description": "ElectroGrid is a Nigerian prepaid electricity recharge platform offering instant DISCO tokens, usage tracking, and multi-meter management.",
+        "areaServed": { "@type": "Country", "name": "Nigeria" }
+      }
+    </script>
+
+    <!-- JSON-LD: WebSite with SearchAction -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "ElectroGrid",
+        "url": "https://www.electrogrid.ng",
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": "https://www.electrogrid.ng/?q={search_term_string}",
+          "query-input": "required name=search_term_string"
+        }
+      }
+    </script>
+    <script>
+      // Pixel snippets self-guard: each block bails if its ID env var is empty.
+      // IDs are injected at build time via Vite's %VITE_*% replacement.
+      (function () {
+        var GA4 = '%VITE_GA4_ID%';
+        var META = '%VITE_META_PIXEL_ID%';
+        var TIKTOK = '%VITE_TIKTOK_PIXEL_ID%';
+        var isPlaceholder = function (v) { return !v || v.charAt(0) === '%'; };
+
+        if (!isPlaceholder(GA4)) {
+          var s = document.createElement('script');
+          s.async = true;
+          s.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA4;
+          document.head.appendChild(s);
+          window.dataLayer = window.dataLayer || [];
+          window.gtag = function () { window.dataLayer.push(arguments); };
+          window.gtag('js', new Date());
+          window.gtag('config', GA4, { send_page_view: false });
+        }
+
+        if (!isPlaceholder(META)) {
+          !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+          n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+          n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+          t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}
+          (window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+          window.fbq('init', META);
+          window.fbq('track', 'PageView');
+        }
+
+        if (!isPlaceholder(TIKTOK)) {
+          !function (w, d, t) {
+            w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie","holdConsent","revokeConsent","grantConsent"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e},ttq.load=function(e,n){var r="https://analytics.tiktok.com/i18n/pixel/events.js",o=n&&n.partner;ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=r,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};n=document.createElement("script");n.type="text/javascript",n.async=!0,n.src=r+"?sdkid="+e+"&lib="+t;e=document.getElementsByTagName("script")[0];e.parentNode.insertBefore(n,e)};
+            ttq.load(TIKTOK);
+            ttq.page();
+          }(window, document, 'ttq');
+        }
+      })();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" media="print" onload="this.media='all'" />

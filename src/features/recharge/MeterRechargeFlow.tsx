@@ -7,6 +7,7 @@ import { AlertBadge } from '@/components/AlertBadge'
 import { useToast } from '@/components/ToastNotification'
 import { metersService, type VerifyMeterResponse } from '@/services/metersService'
 import { rechargesService, type RechargeTransaction } from '@/services/rechargesService'
+import { Events, trackEvent } from '@/services/analytics'
 import { useBillingStore } from '@/store/billingStore'
 import { useRechargesStore } from '@/store/rechargesStore'
 import { useMetersStore } from '@/store/metersStore'
@@ -154,12 +155,17 @@ export function MeterRechargeFlow() {
 
   const handleVerify = async () => {
     setError('')
+    trackEvent(Events.ClickVerifyMeter, { source: 'recharge_flow' })
     if (!meterNumber.trim()) { setError('Enter meter number'); return }
     setLoading(true)
     try {
       const res = await metersService.verify(meterNumber.trim())
       setMeterDetails(res)
       setMeterId(res.meter_id ?? '')
+      trackEvent(Events.MeterVerificationSuccess, {
+        source: 'recharge_flow',
+        disco: (res as { disco_name?: string }).disco_name ?? '',
+      })
       setStep(1)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Verification failed')
@@ -186,6 +192,7 @@ export function MeterRechargeFlow() {
     setError('')
     const n = parseFloat(amount)
     if (isNaN(n) || n < 100) { setError('Enter at least \u20A6100'); return }
+    trackEvent(Events.TopupStart, { amount_ngn: n, meter_id: meterId })
     setLoading(true)
     try {
       const res = await rechargesService.createIntent(meterId, n)
@@ -245,6 +252,11 @@ export function MeterRechargeFlow() {
         const s = (r.status ?? '').toLowerCase()
         if (s === 'completed' || s === 'success') {
           toast.show('Recharge completed successfully', 'success')
+          trackEvent(Events.PaymentSuccess, {
+            amount_ngn: r.amount_kobo ? r.amount_kobo / 100 : Number(amount) || 0,
+            recharge_id: rechargeId,
+            currency: 'NGN',
+          })
           useBillingStore.getState().refresh()
           useRechargesStore.getState().refresh()
           setCompletedRecharge(r)

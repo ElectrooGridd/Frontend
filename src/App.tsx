@@ -3,6 +3,7 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { Toaster } from '@/components/ToastNotification'
 import { useAuthStore } from '@/store/authStore'
 import { useHydrateStores } from '@/store'
+import { trackPageView } from '@/services/analytics'
 import { AuthLayout } from '@/layouts/AuthLayout'
 import { MainLayout } from '@/layouts/MainLayout'
 
@@ -10,6 +11,7 @@ import { MainLayout } from '@/layouts/MainLayout'
 // Lazy-loaded route components — each becomes its own chunk
 // ---------------------------------------------------------------------------
 const Landing = lazy(() => import('@/features/landing/Landing').then((m) => ({ default: m.Landing })))
+const GetStarted = lazy(() => import('@/features/landing/GetStarted').then((m) => ({ default: m.GetStarted })))
 const Login = lazy(() => import('@/features/auth/Login').then((m) => ({ default: m.Login })))
 const Register = lazy(() => import('@/features/auth/Register').then((m) => ({ default: m.Register })))
 const ForgotPassword = lazy(() => import('@/features/auth/ForgotPassword').then((m) => ({ default: m.ForgotPassword })))
@@ -69,11 +71,16 @@ function PublicOnlyRoute({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   const restoreSession = useAuthStore((s) => s.restoreSession)
+  const location = useLocation()
 
   // On app boot, silently exchange the httpOnly cookie for an access token (#6, #8)
   useEffect(() => {
     restoreSession()
   }, [restoreSession])
+
+  useEffect(() => {
+    trackPageView(location.pathname + location.search)
+  }, [location.pathname, location.search])
 
   // Hydrate domain stores when auth state settles
   useHydrateStores()
@@ -83,6 +90,7 @@ export default function App() {
       <Suspense fallback={<RouteSpinner />}>
         <Routes>
           <Route path="/" element={<LandingOrRedirect />} />
+          <Route path="/get-started" element={<PublicOnlyRoute><GetStarted /></PublicOnlyRoute>} />
           <Route element={<AuthLayout />}>
             <Route path="/login" element={<PublicOnlyRoute><Login /></PublicOnlyRoute>} />
             <Route path="/register" element={<PublicOnlyRoute><Register /></PublicOnlyRoute>} />

@@ -1,0 +1,11 @@
+# ElectroGrid robots.txt
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /meters
+Disallow: /recharge
+Disallow: /recharge/history
+Disallow: /verify-email
+Disallow: /reset-password
+
+Sitemap: https://www.electrogrid.ng/sitemap.xml

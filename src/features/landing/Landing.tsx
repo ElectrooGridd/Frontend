@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/Button'
+import { SEO } from '@/components/SEO'
 import { quickRechargeService, type QuickVerifyResponse } from '@/services/quickRechargeService'
+import { Events, trackEvent } from '@/services/analytics'
 
 /* ------------------------------------------------------------------ */
 /*  Scroll-reveal hook                                                 */
@@ -37,6 +39,7 @@ function QuickRecharge() {
   const handleVerify = async () => {
     setError('')
     const num = meterNumber.replace(/\s/g, '')
+    trackEvent(Events.ClickVerifyMeter, { source: 'landing_quick_recharge' })
     if (!num || num.length < 6) {
       setError('Enter a valid meter number')
       return
@@ -45,6 +48,10 @@ function QuickRecharge() {
     try {
       const res = await quickRechargeService.verifyMeter(num)
       setMeterDetails(res)
+      trackEvent(Events.MeterVerificationSuccess, {
+        source: 'landing_quick_recharge',
+        disco: res.disco_name ?? '',
+      })
       setStep('confirm')
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not verify meter')
@@ -557,6 +564,9 @@ function FeatureIllustration({ type }: { type: string }) {
 /*  LANDING PAGE                                                       */
 /* ================================================================== */
 export function Landing() {
+  useEffect(() => {
+    trackEvent(Events.LandingPageView, { variant: 'home' })
+  }, [])
   const heroRef = useReveal<HTMLDivElement>()
   const stepsHeaderRef = useReveal<HTMLDivElement>()
   const featuresHeaderRef = useReveal<HTMLDivElement>()
@@ -566,6 +576,12 @@ export function Landing() {
   const ctaRef = useReveal<HTMLDivElement>()
 
   return (
+    <>
+    <SEO
+      title="ElectroGrid – Prepaid Meter Recharge & Electricity Tokens in Nigeria"
+      description="Recharge any prepaid electricity meter in Nigeria in seconds. Buy DISCO tokens instantly, track usage, and manage multiple meters from one dashboard."
+      path="/"
+    />
     <div className="min-h-screen flex flex-col bg-[#FAFDF9] overflow-x-hidden" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
 
       {/* ───────────── NAVBAR ───────────── */}
@@ -1065,6 +1081,7 @@ export function Landing() {
         </div>
       </footer>
     </div>
+    </>
   )
 }
 

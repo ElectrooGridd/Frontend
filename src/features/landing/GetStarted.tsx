@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { Button } from '@/components/Button'
 import { SEO } from '@/components/SEO'
+import { ScrollIndicator } from '@/components/ScrollIndicator'
+import { WaitlistModal } from '@/components/WaitlistModal'
 import { Events, trackEvent } from '@/services/analytics'
 import { quickRechargeService, type QuickVerifyResponse } from '@/services/quickRechargeService'
 
@@ -27,11 +29,11 @@ const FAQS = [
 ]
 
 export function GetStarted() {
-  const navigate = useNavigate()
   const [meterNumber, setMeterNumber] = useState('')
   const [meterDetails, setMeterDetails] = useState<QuickVerifyResponse | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [waitlistOpen, setWaitlistOpen] = useState(false)
 
   useEffect(() => {
     trackEvent(Events.LandingPageView, { variant: 'campaign_get_started' })
@@ -60,15 +62,7 @@ export function GetStarted() {
 
   const handleContinue = () => {
     if (!meterDetails) return
-    navigate('/login', {
-      state: {
-        quickRecharge: {
-          meterNumber: meterDetails.meter_number,
-          meterDetails,
-          amount: '',
-        },
-      },
-    })
+    setWaitlistOpen(true)
   }
 
   return (
@@ -82,15 +76,20 @@ export function GetStarted() {
       className="min-h-screen bg-[#FAFDF9] text-slate-900"
       style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}
     >
+      <ScrollIndicator />
       <nav className="sticky top-0 z-50 backdrop-blur-md bg-[#FAFDF9]/85 border-b border-teal-100/50">
         <div className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
             <img src="/images/logo.png" alt="ElectroGrid" className="w-10 h-10 object-contain" />
             <span className="font-bold text-slate-800">ElectroGrid</span>
           </Link>
-          <Link to="/login">
-            <Button variant="ghost" size="sm" className="font-semibold">Log in</Button>
-          </Link>
+          <Button
+            size="sm"
+            onClick={() => setWaitlistOpen(true)}
+            className="bg-teal-500 hover:bg-teal-400 text-white font-semibold rounded-lg shadow-md shadow-teal-500/20"
+          >
+            Join waitlist
+          </Button>
         </div>
       </nav>
 
@@ -149,7 +148,7 @@ export function GetStarted() {
                   </div>
                 </div>
                 <Button onClick={handleContinue} className="w-full h-12 text-base font-semibold">
-                  Continue to top up
+                  Get notified at launch
                 </Button>
                 <button
                   onClick={() => { setMeterDetails(null); setMeterNumber('') }}
@@ -243,6 +242,13 @@ export function GetStarted() {
         © {new Date().getFullYear()} ElectroGrid. All rights reserved.
       </footer>
     </div>
+    <WaitlistModal
+      open={waitlistOpen}
+      onClose={() => setWaitlistOpen(false)}
+      source="get_started"
+      prefillMeter={meterDetails?.meter_number}
+      prefillDisco={meterDetails?.disco_name}
+    />
     </>
   )
 }

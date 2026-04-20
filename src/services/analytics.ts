@@ -23,6 +23,7 @@ export const Events = {
   MeterVerificationSuccess: 'meter_verification_success',
   TopupStart: 'topup_start',
   PaymentSuccess: 'payment_success',
+  JoinWaitlist: 'join_waitlist',
 } as const
 
 export type EventName = (typeof Events)[keyof typeof Events]
@@ -35,6 +36,7 @@ const metaStandardEvent: Partial<Record<EventName, string>> = {
   [Events.MeterVerificationSuccess]: 'Lead',
   [Events.TopupStart]: 'InitiateCheckout',
   [Events.PaymentSuccess]: 'Purchase',
+  [Events.JoinWaitlist]: 'Lead',
 }
 
 export function trackEvent(name: EventName, params: EventParams = {}) {

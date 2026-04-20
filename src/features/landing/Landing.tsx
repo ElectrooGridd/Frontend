@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/Button'
 import { SEO } from '@/components/SEO'
+import { ScrollIndicator } from '@/components/ScrollIndicator'
+import { WaitlistModal } from '@/components/WaitlistModal'
 import { quickRechargeService, type QuickVerifyResponse } from '@/services/quickRechargeService'
 import { Events, trackEvent } from '@/services/analytics'
 
@@ -28,7 +29,11 @@ function useReveal<T extends HTMLElement>() {
 /* ------------------------------------------------------------------ */
 type QuickStep = 'meter' | 'confirm' | 'amount' | 'processing' | 'done'
 
-function QuickRecharge() {
+type QuickRechargeProps = {
+  onRequestWaitlist: (prefill: { meterNumber?: string; disco?: string }) => void
+}
+
+function QuickRecharge({ onRequestWaitlist }: QuickRechargeProps) {
   const [step, setStep] = useState<QuickStep>('meter')
   const [meterNumber, setMeterNumber] = useState('')
   const [meterDetails, setMeterDetails] = useState<QuickVerifyResponse | null>(null)
@@ -60,8 +65,6 @@ function QuickRecharge() {
     }
   }
 
-  const navigate = useNavigate()
-
   const handleRecharge = () => {
     setError('')
     const n = parseFloat(amount)
@@ -70,16 +73,11 @@ function QuickRecharge() {
       return
     }
     if (!meterDetails) return
-    // Redirect to login with meter + amount state; after login the user
-    // lands on /recharge with everything pre-filled.
-    navigate('/login', {
-      state: {
-        quickRecharge: {
-          meterNumber: meterDetails.meter_number,
-          meterDetails,
-          amount: String(n),
-        },
-      },
+    // DISCO integrations aren't live yet — collect interest via waitlist
+    // instead of sending users into an auth flow that can't complete.
+    onRequestWaitlist({
+      meterNumber: meterDetails.meter_number,
+      disco: meterDetails.disco_name,
     })
   }
 
@@ -288,7 +286,7 @@ function QuickRecharge() {
               disabled={loading || !amount || parseFloat(amount) < 500}
               className="flex-1 py-3.5 rounded-xl bg-teal-500 hover:bg-teal-400 active:bg-teal-600 text-white font-bold text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-md shadow-teal-500/20 cartoon-btn"
             >
-              {`Sign in & Pay ${'\u20A6'}${amount ? parseFloat(amount).toLocaleString() : '0'}`}
+              {`Join waitlist · ${'\u20A6'}${amount ? parseFloat(amount).toLocaleString() : '0'}`}
             </button>
           </div>
           {/* Meter summary mini */}
@@ -575,6 +573,16 @@ export function Landing() {
   const faqHeaderRef = useReveal<HTMLDivElement>()
   const ctaRef = useReveal<HTMLDivElement>()
 
+  const [waitlistOpen, setWaitlistOpen] = useState(false)
+  const [waitlistSource, setWaitlistSource] = useState<string>('landing_generic')
+  const [waitlistPrefill, setWaitlistPrefill] = useState<{ meterNumber?: string; disco?: string }>({})
+
+  const openWaitlist = (source: string, prefill: { meterNumber?: string; disco?: string } = {}) => {
+    setWaitlistSource(source)
+    setWaitlistPrefill(prefill)
+    setWaitlistOpen(true)
+  }
+
   return (
     <>
     <SEO
@@ -583,6 +591,8 @@ export function Landing() {
       path="/"
     />
     <div className="min-h-screen flex flex-col bg-[#FAFDF9] overflow-x-hidden" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
+
+      <ScrollIndicator />
 
       {/* ───────────── NAVBAR ───────────── */}
       <nav className="sticky top-0 z-50 backdrop-blur-md bg-[#FAFDF9]/85 border-b border-teal-100/50">
@@ -597,16 +607,13 @@ export function Landing() {
             <a href="#faq" className="hover:text-teal-600 transition-colors">FAQ</a>
           </div>
           <div className="flex items-center gap-3">
-            <Link to="/login">
-              <Button variant="ghost" size="sm" className="text-slate-600 hover:text-teal-700 shadow-none font-semibold">
-                Log in
-              </Button>
-            </Link>
-            <Link to="/register">
-              <Button size="sm" className="bg-teal-500 hover:bg-teal-400 text-white font-semibold rounded-xl shadow-md shadow-teal-500/20 cartoon-btn border-0">
-                Get started
-              </Button>
-            </Link>
+            <Button
+              size="sm"
+              onClick={() => openWaitlist('landing_nav')}
+              className="bg-teal-500 hover:bg-teal-400 text-white font-semibold rounded-xl shadow-md shadow-teal-500/20 cartoon-btn border-0"
+            >
+              Join waitlist
+            </Button>
           </div>
         </div>
       </nav>
@@ -649,23 +656,19 @@ export function Landing() {
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                <Link to="/register">
-                  <Button
-                    size="lg"
-                    className="w-full sm:w-auto bg-teal-500 hover:bg-teal-400 text-white px-8 py-4 text-base font-bold rounded-2xl shadow-lg shadow-teal-500/25 cartoon-btn border-0"
-                  >
-                    Start recharging — it's free
-                  </Button>
-                </Link>
-                <Link to="/login">
-                  <Button
-                    variant="secondary"
-                    size="lg"
-                    className="w-full sm:w-auto bg-white hover:bg-teal-50 text-slate-700 border-2 border-slate-200 hover:border-teal-200 px-8 py-4 text-base font-bold rounded-2xl shadow-sm cartoon-btn"
-                  >
-                    I have an account
-                  </Button>
-                </Link>
+                <Button
+                  size="lg"
+                  onClick={() => openWaitlist('landing_hero')}
+                  className="w-full sm:w-auto bg-teal-500 hover:bg-teal-400 text-white px-8 py-4 text-base font-bold rounded-2xl shadow-lg shadow-teal-500/25 cartoon-btn border-0"
+                >
+                  Join the waitlist
+                </Button>
+                <a
+                  href="#quick-recharge"
+                  className="w-full sm:w-auto inline-flex items-center justify-center bg-white hover:bg-teal-50 text-slate-700 border-2 border-slate-200 hover:border-teal-200 px-8 py-4 text-base font-bold rounded-2xl shadow-sm cartoon-btn transition-colors"
+                >
+                  See how it works
+                </a>
               </div>
 
               {/* Trust badges */}
@@ -689,11 +692,19 @@ export function Landing() {
         </div>
 
         {/* Scroll hint */}
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 animate-gentle-bounce">
-          <div className="w-8 h-12 rounded-full border-2 border-slate-300 flex items-start justify-center pt-2">
-            <div className="w-1.5 h-3 rounded-full bg-slate-400 animate-[gentleBounce_1.5s_ease-in-out_infinite]" />
+        <a
+          href="#quick-recharge"
+          aria-label="Scroll to next section"
+          className="group absolute bottom-5 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 text-slate-500 hover:text-teal-600 transition-colors"
+        >
+          <span className="text-[11px] font-bold uppercase tracking-[0.18em]">Scroll</span>
+          <div className="w-7 h-11 rounded-full border-2 border-slate-400 group-hover:border-teal-500 flex items-start justify-center pt-2 transition-colors">
+            <div className="w-1.5 h-2.5 rounded-full bg-slate-400 group-hover:bg-teal-500 animate-[gentleBounce_1.5s_ease-in-out_infinite] transition-colors" />
           </div>
-        </div>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="animate-gentle-bounce -mt-0.5">
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </a>
       </section>
 
       {/* ───────────── BUY ON THE FLY ───────────── */}
@@ -767,7 +778,9 @@ export function Landing() {
                     <p className="text-xs text-slate-400">No account required</p>
                   </div>
                 </div>
-                <QuickRecharge />
+                <QuickRecharge
+                  onRequestWaitlist={(prefill) => openWaitlist('landing_quick_recharge', prefill)}
+                />
               </div>
             </div>
           </div>
@@ -887,11 +900,13 @@ export function Landing() {
                 ))}
               </div>
               <div className="mt-8">
-                <Link to="/register">
-                  <Button size="lg" className="bg-teal-500 hover:bg-teal-400 text-white px-8 py-3.5 font-bold rounded-2xl shadow-md shadow-teal-500/20 cartoon-btn border-0">
-                    Try it now
-                  </Button>
-                </Link>
+                <Button
+                  size="lg"
+                  onClick={() => openWaitlist('landing_why')}
+                  className="bg-teal-500 hover:bg-teal-400 text-white px-8 py-3.5 font-bold rounded-2xl shadow-md shadow-teal-500/20 cartoon-btn border-0"
+                >
+                  Join the waitlist
+                </Button>
               </div>
             </div>
           </div>
@@ -1005,30 +1020,20 @@ export function Landing() {
 
             <div className="relative">
               <h2 className="text-3xl sm:text-4xl font-extrabold text-white mb-4 tracking-tight">
-                Ready to ditch the queue?
+                Be first in line
               </h2>
               <p className="text-teal-100 mb-8 max-w-md mx-auto leading-relaxed text-lg">
-                Join thousands of Nigerians recharging from home. Takes 30 seconds to sign up.
+                We're rolling out DISCO by DISCO. Join the waitlist and we'll email you the second recharge goes live for your provider.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Link to="/register">
-                  <Button
-                    variant="ghost"
-                    size="lg"
-                    className="w-full sm:w-auto !bg-white hover:!bg-slate-50 !text-teal-700 px-10 py-4 text-base font-extrabold rounded-2xl shadow-lg cartoon-btn border-0"
-                  >
-                    Create free account
-                  </Button>
-                </Link>
-                <Link to="/login">
-                  <Button
-                    variant="ghost"
-                    size="lg"
-                    className="w-full sm:w-auto text-white hover:bg-white/15 px-8 py-4 text-base font-bold rounded-2xl shadow-none border-2 border-white/25"
-                  >
-                    Sign in instead
-                  </Button>
-                </Link>
+                <Button
+                  variant="ghost"
+                  size="lg"
+                  onClick={() => openWaitlist('landing_final_cta')}
+                  className="w-full sm:w-auto !bg-white hover:!bg-slate-50 !text-teal-700 px-10 py-4 text-base font-extrabold rounded-2xl shadow-lg cartoon-btn border-0"
+                >
+                  Join the waitlist
+                </Button>
               </div>
             </div>
           </div>
@@ -1056,11 +1061,17 @@ export function Landing() {
               </ul>
             </div>
             <div>
-              <h4 className="text-xs font-bold tracking-widest text-slate-400 uppercase mb-4">Account</h4>
+              <h4 className="text-xs font-bold tracking-widest text-slate-400 uppercase mb-4">Get access</h4>
               <ul className="space-y-2.5 text-sm text-slate-500">
-                <li><Link to="/register" className="hover:text-teal-600 transition-colors">Create account</Link></li>
-                <li><Link to="/login" className="hover:text-teal-600 transition-colors">Log in</Link></li>
-                <li><Link to="/forgot-password" className="hover:text-teal-600 transition-colors">Reset password</Link></li>
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => openWaitlist('landing_footer')}
+                    className="hover:text-teal-600 transition-colors text-left"
+                  >
+                    Join the waitlist
+                  </button>
+                </li>
               </ul>
             </div>
             <div>
@@ -1081,6 +1092,13 @@ export function Landing() {
         </div>
       </footer>
     </div>
+    <WaitlistModal
+      open={waitlistOpen}
+      onClose={() => setWaitlistOpen(false)}
+      source={waitlistSource}
+      prefillMeter={waitlistPrefill.meterNumber}
+      prefillDisco={waitlistPrefill.disco}
+    />
     </>
   )
 }

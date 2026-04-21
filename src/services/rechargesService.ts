@@ -25,6 +25,16 @@ export function koboToNaira(kobo: number): number {
 /** Default tariff in kobo per unit (₦38.575/kWh = 3857.50 kobo = 385750 in integer kobo) */
 const DEFAULT_TARIFF_KOBO_PER_UNIT = 385750
 
+// The backend requires an `Idempotency-Key` header on the three money-moving
+// recharge endpoints (createIntent, confirm, verifyPayment). The server hashes
+// method+path+body and rejects reuse of the same key with a different body
+// (422 idempotency_key_reused), so each endpoint MUST generate its OWN fresh
+// key — do not share one key across the three calls in a single payment flow.
+// Keep these inline: a shared variable at the call site would be a footgun.
+function newIdempotencyKey(): string {
+  return crypto.randomUUID()
+}
+
 export const rechargesService = {
   async createIntent(
     meter_id: string,
@@ -37,7 +47,9 @@ export const rechargesService = {
       tariff_kobo_per_unit: options?.tariff_kobo_per_unit ?? DEFAULT_TARIFF_KOBO_PER_UNIT,
     }
     if (options?.expires_at != null) body.expires_at = options.expires_at
-    const { data } = await api.post<CreateIntentResponse>('/recharges/intents', body)
+    const { data } = await api.post<CreateIntentResponse>('/recharges/intents', body, {
+      headers: { 'Idempotency-Key': newIdempotencyKey() },
+    })
     return data
   },
 
@@ -50,6 +62,8 @@ export const rechargesService = {
       intent_id,
       payment_provider,
       payment_reference,
+    }, {
+      headers: { 'Idempotency-Key': newIdempotencyKey() },
     })
     return data
   },
@@ -63,6 +77,8 @@ export const rechargesService = {
     const { data } = await api.post<VerifyPaymentResponse>('/recharges/verify-payment', {
       intent_id,
       reference,
+    }, {
+      headers: { 'Idempotency-Key': newIdempotencyKey() },
     })
     return data
   },

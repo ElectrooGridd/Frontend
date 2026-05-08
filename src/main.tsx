@@ -5,8 +5,6 @@ import { Helmet, HelmetProvider } from 'react-helmet-async'
 import App from './App'
 import './index.css'
 
-console.info('[workflow-smoke-test] v1-2026-05-08', { apiUrl: import.meta.env.VITE_API_URL })
-
 // Dismiss the HTML preloader once React is ready
 function dismissPreloader() {
   const el = document.getElementById('preloader')
